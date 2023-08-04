@@ -33,6 +33,6 @@ build/
 .vscode/
 
 # New ignores
-#./src/main/resources/application.properties
+
 src/main/resources/application.properties
 env.env
