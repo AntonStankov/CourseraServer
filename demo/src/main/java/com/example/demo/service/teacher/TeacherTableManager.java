@@ -85,6 +85,28 @@ public class TeacherTableManager {
         return teacher;
     }
 
+
+    public Teacher getTeacherByUserId(Long userId, String email) {
+        Teacher teacher = null;
+        try (Connection connection = datasource.createConnection()) {
+            String sql = "SELECT * FROM teachers WHERE user_id = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setLong(1, userId);
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        teacher = new Teacher();
+                        teacher.setTeacher_id(resultSet.getLong("teacher_id"));
+                        teacher.setName(resultSet.getString("name"));
+                        teacher.setUser(userService.findByEmail(email));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return teacher;
+    }
+
     public void updateTeacher(Teacher teacher) {
         try (Connection connection = datasource.createConnection()) {
             String sql = "UPDATE teachers SET name = ? WHERE teacher_id = ?";

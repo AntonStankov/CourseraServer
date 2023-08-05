@@ -20,21 +20,10 @@ public class UserTableManager {
 
     private final DataSource datasource =  new DataSource();
 
-    @Value("${spring.datasource.url}")
-    private final String url;
-
-    @Value("${spring.datasource.username}")
-    private final String user;
-
-    @Value("${spring.datasource.password}")
-    private final String password;
 
 
-    public UserTableManager(String url, String user, String password) {
-        this.url = url;
-        this.user = user;
-        this.password = password;
-    }
+
+
 
 
     public User insertUser(User user) {

@@ -17,4 +17,8 @@ public interface StudentService {
     default Student findById(Long id, String email){
         return studentTableManager.getStudentById(id, email);
     }
+
+    default Student findStudentByUserId(Long userId, String email){
+        return studentTableManager.getStudentByUserId(userId, email);
+    }
 }

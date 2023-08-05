@@ -22,10 +22,10 @@ public class Enrollment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long enrollment_id;
 
-    @ManyToMany
+    @ManyToOne
     private Student student;
 
-    @ManyToMany
+    @ManyToOne
     private Course course;
 
     @Column

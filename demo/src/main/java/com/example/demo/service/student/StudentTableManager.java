@@ -74,8 +74,31 @@ public class StudentTableManager {
                     if (resultSet.next()) {
                         student = new Student();
                         student.setStudent_id(resultSet.getLong("student_id"));
-                        student.setFirstName(resultSet.getString("first_name"));
-                        student.setLastName(resultSet.getString("last_name"));
+                        student.setFirstName(resultSet.getString("firstName"));
+                        student.setLastName(resultSet.getString("lastName"));
+                        student.setUser(userService.findByEmail(email));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return student;
+    }
+
+
+    public Student getStudentByUserId(Long userId, String email) {
+        Student student = null;
+        try (Connection connection = datasource.createConnection()) {
+            String sql = "SELECT * FROM students WHERE user_id = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setLong(1, userId);
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        student = new Student();
+                        student.setStudent_id(resultSet.getLong("student_id"));
+                        student.setFirstName(resultSet.getString("firstName"));
+                        student.setLastName(resultSet.getString("lastName"));
                         student.setUser(userService.findByEmail(email));
                     }
                 }

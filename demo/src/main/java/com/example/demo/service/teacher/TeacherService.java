@@ -17,4 +17,8 @@ public interface TeacherService {
     public default Teacher findById(Long id, String email){
         return teacherTableManager.getTeacherById(id, email);
     }
+
+    public default Teacher findByUserId(Long userId, String email){
+        return teacherTableManager.getTeacherByUserId(userId, email);
+    }
 }

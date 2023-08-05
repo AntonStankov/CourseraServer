@@ -1,9 +1,6 @@
 package com.example.demo.jwt;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -77,13 +74,22 @@ public class JwtTokenService {
         return getClaimFromToken(token, Claims::getExpiration);
     }
 
-//    public boolean isTokenExpired(String token) {
-//        try {
-//            Claims claims = Jwts.parserBuilder().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody();
-//            Date expirationDate = claims.getExpiration();
-//            return expirationDate.before(new Date());
-//        } catch (JwtException | IllegalArgumentException e) {
-//            return true;
-//        }
-//    }
+    public boolean isTokenExpired(String token) {
+
+        try {
+            Claims claims = Jwts.parser()
+                    .setSigningKey(SECRET_KEY)
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            Date expirationDate = claims.getExpiration();
+            Date currentDate = new Date();
+
+            return expirationDate.before(currentDate);
+        } catch (ExpiredJwtException ex) {
+            return true;  // Token has expired
+        } catch (Exception ex) {
+            return false; // Token decoding failed or other issues
+        }
+    }
 }
