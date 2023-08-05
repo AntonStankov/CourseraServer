@@ -4,10 +4,13 @@ import com.example.demo.UserRoleEnum;
 import com.example.demo.entity.Student;
 import com.example.demo.entity.Teacher;
 import com.example.demo.entity.User;
+import com.example.demo.jwt.BlackListService;
 import com.example.demo.jwt.JwtTokenService;
 import com.example.demo.service.student.StudentService;
 import com.example.demo.service.teacher.TeacherService;
 import com.example.demo.service.user.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import org.eclipse.jetty.server.Request;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -48,6 +51,9 @@ public class UserController {
 
     @Autowired
     private JwtTokenService jwtTokenUtil;
+
+    @Autowired
+    private BlackListService blackListService;
 
 
 
@@ -97,7 +103,7 @@ public class UserController {
 
         teacherService.save(teacher, userService.findByEmail(user.getEmail()));
         return teacherService.findById(teacher.getTeacher_id(), user.getEmail());
-        //Should write validator if it has same email
+        //Should write validator if email is already registered
 
     }
 //
@@ -109,12 +115,25 @@ public class UserController {
 
         User user = userService.findByEmail(authRequest.getEmail());
         String token = jwtTokenService.generateToken(user.getEmail());
+        String refreshToken = jwtTokenService.generateRefreshToken(authRequest.getEmail());
 
+        return new AuthResponse("", token, refreshToken, user);
+    }
 
+    @GetMapping("/refresh/v1")
+    public AuthResponse refresh(HttpServletRequest httpServletRequest){
+        String refreshToken = jwtTokenService.getTokenFromRequest(httpServletRequest);
+        String email = jwtTokenService.getEmailFromToken(refreshToken);
+        if (userService.findByEmail(email) == null) throw new RuntimeException("No user with this email " + email + " ! Someone is hacker!");
+        String newToken = jwtTokenService.generateToken(email);
+        return new AuthResponse("", newToken, refreshToken, userService.findByEmail(email));
+    }
 
-        return new AuthResponse("", token, user);
-
-
+    @GetMapping("/logout")
+    public String logout(HttpServletRequest httpServletRequest){
+        String token = jwtTokenService.getTokenFromRequest(httpServletRequest);
+        blackListService.addTokenToBlacklist(token);
+        return "Logged out!";
     }
 
     @GetMapping("/test/hello")

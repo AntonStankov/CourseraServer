@@ -29,10 +29,18 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
 
 
+    private BlackListService blackListService;
 
-    public JwtRequestFilter(CustomUserDetailsService jwtUserDetailsService, JwtTokenService jwtTokenUtil){
+
+
+
+
+    @Autowired
+    public JwtRequestFilter(CustomUserDetailsService jwtUserDetailsService, JwtTokenService jwtTokenUtil, BlackListService blackListService){
         this.jwtUserDetailsService = jwtUserDetailsService;
         this.jwtTokenUtil = jwtTokenUtil;
+        this.blackListService = blackListService;
+
     }
 
     @Override
@@ -81,6 +89,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
 
         String authToken = jwtTokenUtil.getTokenFromRequest(request);
+
+        if (blackListService.isTokenBlacklisted(authToken)) throw new RuntimeException("You are logged out");
 
 
         filterChain.doFilter(request, response);
