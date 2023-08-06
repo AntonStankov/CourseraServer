@@ -1,10 +1,9 @@
 package com.example.demo.service.user;
 
 
-import com.example.demo.UserRoleEnum;
+import com.example.demo.enums.UserRoleEnum;
 import com.example.demo.entity.User;
 import lombok.NoArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
@@ -19,12 +18,7 @@ public class UserTableManager {
 
 
     private final DataSource datasource =  new DataSource();
-
-
-
-
-
-
+    
 
     public User insertUser(User user) {
         try (Connection connection = datasource.createConnection()) {

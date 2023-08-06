@@ -1,6 +1,6 @@
 package com.example.demo.entity;
 
-import com.example.demo.UserRoleEnum;
+import com.example.demo.enums.UserRoleEnum;
 import jakarta.persistence.*;
 import lombok.*;
 

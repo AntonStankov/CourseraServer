@@ -1,7 +1,7 @@
 package com.example.demo.service.enrollment;
 
 
-import com.example.demo.UserRoleEnum;
+import com.example.demo.enums.UserRoleEnum;
 import com.example.demo.config.DataSource;
 import com.example.demo.entity.*;
 import com.example.demo.service.course.CourseService;
@@ -52,7 +52,6 @@ public class EnrollmentTableManager {
                 int affectedRows = preparedStatement.executeUpdate();
 
 
-
                 if (affectedRows > 0) {
                     ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
                     if (generatedKeys.next()) {
@@ -69,7 +68,10 @@ public class EnrollmentTableManager {
     public List<Enrollment> getAllEnrollments() {
         List<Enrollment> enrollments = new ArrayList<>();
         try (Connection connection = datasource.createConnection()) {
-            String sql = "SELECT * FROM enrollment";
+            String sql = "SELECT * FROM enrollment e " +
+                        "JOIN courses c ON e.course_id = c.courseId"
+                    ;
+
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql);
                  ResultSet resultSet = preparedStatement.executeQuery()) {
                 while (resultSet.next()) {
@@ -118,9 +120,6 @@ public class EnrollmentTableManager {
                         enrollment.setCourse(course);
 
 
-
-
-
                         enrollment.setCourse(course);
                     }
                 }
@@ -131,15 +130,15 @@ public class EnrollmentTableManager {
         return enrollment;
     }
 
-    public void updateUser(User user) {
+    public void updateEnrollment(Enrollment enrollment) {
         try (Connection connection = datasource.createConnection()) {
-            String sql = "UPDATE app_users SET password = ?, email = ?, role = ?, timeCreated = ? WHERE id = ?";
+            String sql = "UPDATE enrollment SET enrollment_id = ?, student_id = ?, course_id = ?, completion_date = ? WHERE enrollment_id = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setString(1, user.getPassword());
-                preparedStatement.setString(2, user.getEmail());
-                preparedStatement.setString(3, user.getRole().name());
-                preparedStatement.setTimestamp(4, Timestamp.valueOf(user.getTimeCreated()));
-                preparedStatement.setLong(5, user.getId());
+                preparedStatement.setLong(1, enrollment.getEnrollment_id());
+                preparedStatement.setLong(2, enrollment.getStudent().getStudent_id());
+                preparedStatement.setLong(3, enrollment.getCourse().getCourseId());
+                preparedStatement.setTimestamp(4, Timestamp.valueOf(enrollment.getCompletion_date()));
+                preparedStatement.setLong(5, enrollment.getEnrollment_id());
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException e) {
@@ -147,38 +146,15 @@ public class EnrollmentTableManager {
         }
     }
 
-    public void deleteUser(long userId) {
+    public void deleteEnrollment(long enrollmentId) {
         try (Connection connection = datasource.createConnection()) {
-            String sql = "DELETE FROM app_users WHERE id = ?";
+            String sql = "DELETE FROM enrollment WHERE enrollment_id = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setLong(1, userId);
+                preparedStatement.setLong(1, enrollmentId);
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
-
-    public User getUserByEmail(String email) {
-        User user = null;
-        try (Connection connection = datasource.createConnection()) {
-            String sql = "SELECT * FROM app_users WHERE email = ?";
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setString(1, email);
-                try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                    if (resultSet.next()) {
-                        user = new User();
-                        user.setId(resultSet.getLong("id"));
-                        user.setPassword(resultSet.getString("password"));
-                        user.setEmail(resultSet.getString("email"));
-                        user.setRole(UserRoleEnum.valueOf(resultSet.getString("role")));
-                        user.setTimeCreated(resultSet.getTimestamp("timeCreated").toLocalDateTime());
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return user;
     }
 }

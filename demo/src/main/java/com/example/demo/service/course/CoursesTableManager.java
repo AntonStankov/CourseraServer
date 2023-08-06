@@ -110,7 +110,7 @@ public class CoursesTableManager {
         return course;
     }
 
-    public void updateTeacher(Course course) {
+    public void updateCourse(Course course) {
         try (Connection connection = datasource.createConnection()) {
             String sql = "UPDATE courses SET courseName = ? WHERE courseId = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -123,7 +123,7 @@ public class CoursesTableManager {
         }
     }
 
-    public void deleteTeacher(Long courseId) {
+    public void deleteCourse(Long courseId) {
         try (Connection connection = datasource.createConnection()) {
             String sql = "DELETE FROM courses WHERE courseId = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
