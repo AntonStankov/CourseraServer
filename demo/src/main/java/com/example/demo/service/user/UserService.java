@@ -18,4 +18,16 @@ public interface UserService {
         return tableManager.getUserByEmail(email);
     }
 
+    public default User updateUser(User user, Long id){
+        return tableManager.updateUser(user, id);
+    }
+
+    public default User findUserById(Long id){
+        return tableManager.getUserById(id);
+    }
+
+    public default void deleteUser(Long id){
+        tableManager.deleteUser(id);
+    }
+
 }

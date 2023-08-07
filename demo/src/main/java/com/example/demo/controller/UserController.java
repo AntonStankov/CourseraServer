@@ -21,6 +21,13 @@ import java.time.LocalDateTime;
 @RequestMapping("/user")
 public class UserController {
 
+
+    private TeacherService teacherService = new TeacherService() {
+        @Override
+        public Teacher save(Teacher teacher, User user) {
+            return TeacherService.super.save(teacher, user);
+        }
+    };
     @Autowired
     private JwtTokenService jwtTokenService;
 
@@ -30,12 +37,25 @@ public class UserController {
         public User save(User user) {
             return UserService.super.save(user);
         }
-    };
 
-    private TeacherService teacherService = new TeacherService() {
         @Override
-        public Teacher save(Teacher teacher, User user) {
-            return TeacherService.super.save(teacher, user);
+        public User findByEmail(String email) {
+            return UserService.super.findByEmail(email);
+        }
+
+        @Override
+        public User updateUser(User user, Long id) {
+            return UserService.super.updateUser(user, id);
+        }
+
+        @Override
+        public User findUserById(Long id) {
+            return UserService.super.findUserById(id);
+        }
+
+        @Override
+        public void deleteUser(Long id) {
+            UserService.super.deleteUser(id);
         }
     };
 
@@ -113,10 +133,12 @@ public class UserController {
     public AuthResponse login(@RequestBody AuthRequest authRequest) {
 
         User user = userService.findByEmail(authRequest.getEmail());
-        String token = jwtTokenService.generateToken(user.getEmail());
-        String refreshToken = jwtTokenService.generateRefreshToken(authRequest.getEmail());
-
-        return new AuthResponse("", token, refreshToken, user);
+        if (passwordEncoder.matches(authRequest.getPassword(), user.getPassword())){
+            String token = jwtTokenService.generateToken(user.getEmail());
+            String refreshToken = jwtTokenService.generateRefreshToken(authRequest.getEmail());
+            return new AuthResponse("", token, refreshToken, user);
+        }
+        else throw new RuntimeException("Invalid email or password!");
     }
 
     @GetMapping("/refresh/v1")
@@ -138,6 +160,15 @@ public class UserController {
     @GetMapping("/test/hello")
     public String hello(){
         return "hello user";
+    }
+
+
+    //Other crud operations
+    @PostMapping("/update")
+    public User updateUser(@RequestBody User user, HttpServletRequest httpServletRequest){
+        String email = jwtTokenService.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest));
+        User myUser = userService.findByEmail(email);
+        return userService.updateUser(user, myUser.getId());
     }
 
 

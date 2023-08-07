@@ -4,6 +4,9 @@ package com.example.demo.service.user;
 import com.example.demo.enums.UserRoleEnum;
 import com.example.demo.entity.User;
 import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
@@ -18,7 +21,9 @@ public class UserTableManager {
 
 
     private final DataSource datasource =  new DataSource();
-    
+
+    PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
 
     public User insertUser(User user) {
         try (Connection connection = datasource.createConnection()) {
@@ -58,23 +63,22 @@ public class UserTableManager {
         return users;
     }
 
-    public void updateUser(User user) {
+    public User updateUser(User user, Long id) {
         try (Connection connection = datasource.createConnection()) {
-            String sql = "UPDATE app_users SET password = ?, email = ?, role = ?, timeCreated = ? WHERE id = ?";
+            String sql = "UPDATE app_users SET password = ? WHERE id = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setString(1, user.getPassword());
-                preparedStatement.setString(2, user.getEmail());
-                preparedStatement.setString(3, user.getRole().name());
-                preparedStatement.setTimestamp(4, Timestamp.valueOf(user.getTimeCreated()));
-                preparedStatement.setLong(5, user.getId());
+                preparedStatement.setString(1, passwordEncoder.encode(user.getPassword()));
+                preparedStatement.setLong(2, id);
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
+        return getUserById(id);
     }
 
-    public void deleteUser(long userId) {
+    public void deleteUser(Long userId) {
         try (Connection connection = datasource.createConnection()) {
             String sql = "DELETE FROM app_users WHERE id = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -92,6 +96,29 @@ public class UserTableManager {
             String sql = "SELECT * FROM app_users WHERE email = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, email);
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        user = new User();
+                        user.setId(resultSet.getLong("id"));
+                        user.setPassword(resultSet.getString("password"));
+                        user.setEmail(resultSet.getString("email"));
+                        user.setRole(UserRoleEnum.valueOf(resultSet.getString("role")));
+                        user.setTimeCreated(resultSet.getTimestamp("timeCreated").toLocalDateTime());
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return user;
+    }
+
+    public User getUserById(Long id) {
+        User user = null;
+        try (Connection connection = datasource.createConnection()) {
+            String sql = "SELECT * FROM app_users WHERE id = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setLong(1, id);
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     if (resultSet.next()) {
                         user = new User();
