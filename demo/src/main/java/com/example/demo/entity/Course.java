@@ -25,4 +25,7 @@ public class Course {
 
     @Column
     String courseName;
+
+    @Column
+    int credit;
 }

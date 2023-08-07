@@ -46,9 +46,10 @@ public class CoursesTableManager {
     private final DataSource datasource = new DataSource();
     public Course insertCourse(Course course, Teacher teacher) {
         try (Connection connection = datasource.createConnection()) {
-            String sql = "INSERT INTO courses (courseName) VALUES (?)";
+            String sql = "INSERT INTO courses (courseName, credit) VALUES (?, ?)";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 preparedStatement.setString(1, course.getCourseName());
+                preparedStatement.setInt(2, course.getCredit());
                 int affectedRows = preparedStatement.executeUpdate();
 
                 if (affectedRows > 0) {
@@ -92,6 +93,7 @@ public class CoursesTableManager {
                         course = new Course();
                         course.setCourseId(resultSet.getLong("courseId"));
                         course.setCourseName(resultSet.getString("courseName"));
+                        course.setCredit(resultSet.getInt("credit"));
 
                         // Create a Teacher object and set its attributes
                         Teacher teacher = new Teacher();
@@ -112,10 +114,11 @@ public class CoursesTableManager {
 
     public void updateCourse(Course course) {
         try (Connection connection = datasource.createConnection()) {
-            String sql = "UPDATE courses SET courseName = ? WHERE courseId = ?";
+            String sql = "UPDATE courses SET courseName = ? credit = ? WHERE courseId = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, course.getCourseName());
-                preparedStatement.setLong(2, course.getCourseId());
+                preparedStatement.setInt(2, course.getCredit());
+                preparedStatement.setLong(3, course.getCourseId());
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException e) {

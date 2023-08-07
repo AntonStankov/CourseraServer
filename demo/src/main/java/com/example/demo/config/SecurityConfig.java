@@ -39,7 +39,7 @@ public class SecurityConfig {
 
     @Bean
     WebSecurityCustomizer webSecurityCustomizer() {
-        return web -> web.ignoring().requestMatchers("/user/register/*", "/user/login");
+        return web -> web.ignoring().requestMatchers("/user/register/*", "/user/login", "/user/register");
     }
 
 

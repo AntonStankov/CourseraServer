@@ -29,10 +29,9 @@ public class StudentTableManager {
 
     public Student insertStudent(Student student, User user) {
         try (Connection connection = datasource.createConnection()) {
-            String sql = "INSERT INTO students (firstName, lastName) VALUES (?, ?)";
+            String sql = "INSERT INTO students (name) VALUES (?)";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-                preparedStatement.setString(1, student.getFirstName());
-                preparedStatement.setString(2, student.getLastName());
+                preparedStatement.setString(1, student.getName());
                 int affectedRows = preparedStatement.executeUpdate();
 
                 if (affectedRows > 0) {
@@ -74,8 +73,7 @@ public class StudentTableManager {
                     if (resultSet.next()) {
                         student = new Student();
                         student.setStudent_id(resultSet.getLong("student_id"));
-                        student.setFirstName(resultSet.getString("firstName"));
-                        student.setLastName(resultSet.getString("lastName"));
+                        student.setName(resultSet.getString("name"));
                         student.setUser(userService.findByEmail(email));
                     }
                 }
@@ -97,8 +95,7 @@ public class StudentTableManager {
                     if (resultSet.next()) {
                         student = new Student();
                         student.setStudent_id(resultSet.getLong("student_id"));
-                        student.setFirstName(resultSet.getString("firstName"));
-                        student.setLastName(resultSet.getString("lastName"));
+                        student.setName(resultSet.getString("name"));
                         student.setUser(userService.findByEmail(email));
                     }
                 }
@@ -109,24 +106,11 @@ public class StudentTableManager {
         return student;
     }
 
-    public void updateStudentFirstName(Student student) {
+    public void updateStudentName(Student student) {
         try (Connection connection = datasource.createConnection()) {
-            String sql = "UPDATE students SET first_name = ? WHERE student_id = ?";
+            String sql = "UPDATE students SET name = ? WHERE student_id = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setString(1, student.getFirstName());
-                preparedStatement.setLong(2, student.getStudent_id());
-                preparedStatement.executeUpdate();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void updateStudentLastName(Student student) {
-        try (Connection connection = datasource.createConnection()) {
-            String sql = "UPDATE students SET last_name = ? WHERE student_id = ?";
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setString(1, student.getLastName());
+                preparedStatement.setString(1, student.getName());
                 preparedStatement.setLong(2, student.getStudent_id());
                 preparedStatement.executeUpdate();
             }

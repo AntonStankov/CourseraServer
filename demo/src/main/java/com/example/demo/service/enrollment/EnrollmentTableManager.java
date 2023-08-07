@@ -107,8 +107,7 @@ public class EnrollmentTableManager {
                         enrollment.setCompletion_date(resultSet.getTimestamp("completion_date").toLocalDateTime());
                         Student student = new Student();
                         student.setStudent_id(resultSet.getLong("student_id"));
-                        student.setFirstName(resultSet.getString("firstName"));
-                        student.setLastName(resultSet.getString("lastName"));
+                        student.setName(resultSet.getString("name"));
                         enrollment.setStudent(student);
                         Course course = new Course();
                         course.setCourseId(resultSet.getLong("courseId"));

@@ -135,4 +135,19 @@ public class UserTableManager {
         }
         return user;
     }
+
+    public User changeEmail(Long userId, String email){
+        User user = null;
+        try (Connection connection = datasource.createConnection()) {
+            String sql = "UPDATE app_users SET email = ? WHERE id = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, email);
+                preparedStatement.setLong(2, userId);
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return getUserById(userId);
+    }
 }

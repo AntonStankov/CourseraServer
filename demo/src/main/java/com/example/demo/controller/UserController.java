@@ -11,8 +11,10 @@ import com.example.demo.service.teacher.TeacherService;
 import com.example.demo.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 
@@ -57,6 +59,11 @@ public class UserController {
         public void deleteUser(Long id) {
             UserService.super.deleteUser(id);
         }
+
+        @Override
+        public User changeEmil(Long id, String email) {
+            return UserService.super.changeEmil(id, email);
+        }
     };
 
     private StudentService studentService = new StudentService() {
@@ -94,37 +101,49 @@ public class UserController {
         user.setTimeCreated(LocalDateTime.now());
         userService.save(user);
 
-//        userRepository.save(user);
         Student student = new Student();
         student.setUser(user);
-        student.setFirstName(authRequest.getFirstName());
-        student.setLastName(authRequest.getLastName());
-//        return teacherRepository.save(teacher);
+        student.setName(authRequest.getName());
 
         studentService.save(student, userService.findByEmail(user.getEmail()));
         return studentService.findById(student.getStudent_id(), user.getEmail());
     }
 
-    @PostMapping("/register/teacher")
-    public Teacher registerTeacher(@RequestBody AuthRequest authRequest){
-        User user = new User();
-        user.setEmail(authRequest.getEmail());
-        user.setPassword(passwordEncoder.encode(authRequest.getPassword()));
-        user.setRole(UserRoleEnum.TEACHER);
-        user.setTimeCreated(LocalDateTime.now());
-        userService.save(user);
+    @PostMapping("/register")
+    public Object register(@RequestBody AuthRequest authRequest){
+        if (authRequest.getRole().toString().equals("STUDENT")){
+            User user = new User();
+            user.setEmail(authRequest.getEmail());
+            user.setPassword(passwordEncoder.encode(authRequest.getPassword()));
+            user.setRole(UserRoleEnum.STUDENT);
+            user.setTimeCreated(LocalDateTime.now());
+            userService.save(user);
 
-//        userRepository.save(user);
-        Teacher teacher = new Teacher();
-        teacher.setUser(user);
-        teacher.setName(authRequest.getName());
-//        return teacherRepository.save(teacher);
+            Student student = new Student();
+            student.setUser(user);
+            student.setName(authRequest.getName());
 
-        teacherService.save(teacher, userService.findByEmail(user.getEmail()));
-        return teacherService.findById(teacher.getTeacher_id());
-        //Should write validator if email is already registered
+            studentService.save(student, userService.findByEmail(user.getEmail()));
+            return studentService.findById(student.getStudent_id(), user.getEmail());
+        }
+        else {
+            User user = new User();
+            user.setEmail(authRequest.getEmail());
+            user.setPassword(passwordEncoder.encode(authRequest.getPassword()));
+            user.setRole(UserRoleEnum.TEACHER);
+            user.setTimeCreated(LocalDateTime.now());
+            userService.save(user);
 
+            Teacher teacher = new Teacher();
+            teacher.setUser(user);
+            teacher.setName(authRequest.getName());
+
+            teacherService.save(teacher, userService.findByEmail(user.getEmail()));
+            return teacherService.findById(teacher.getTeacher_id());
+        }
     }
+
+
 //
 //
 //
@@ -174,6 +193,12 @@ public class UserController {
     @PostMapping("/updateName/teacher")
     public Teacher updateNames(@RequestBody Teacher teacher){
         return teacherService.updateTeacher(teacher);
+    }
+
+    @PostMapping("/changeEmail")
+    public User changeEmail(@RequestBody User user, HttpServletRequest httpServletRequest){
+        if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatusCode.valueOf(403), "JWT has expired!");
+        return userService.changeEmil(user.getId(), user.getEmail());
     }
 
 

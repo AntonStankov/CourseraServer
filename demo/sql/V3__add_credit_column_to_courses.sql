@@ -1,0 +1,2 @@
+ALTER TABLE courses
+ADD COLUMN credit INT DEFAULT 0;

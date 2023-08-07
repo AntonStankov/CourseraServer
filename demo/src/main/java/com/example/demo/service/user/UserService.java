@@ -30,4 +30,8 @@ public interface UserService {
         tableManager.deleteUser(id);
     }
 
+    public default User changeEmil(Long id, String email){
+        return tableManager.changeEmail(id, email);
+    }
+
 }

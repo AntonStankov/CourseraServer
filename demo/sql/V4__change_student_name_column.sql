@@ -1,0 +1,6 @@
+ALTER TABLE students
+DROP COLUMN firstName,
+DROP COLUMN lastName;
+
+ALTER TABLE students
+ADD COLUMN name VARCHAR(255);

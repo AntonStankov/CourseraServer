@@ -1,19 +1,27 @@
 package com.example.demo.controller;
 
 import com.example.demo.entity.*;
+import com.example.demo.jwt.JwtTokenService;
 import com.example.demo.service.course.CourseService;
 import com.example.demo.service.enrollment.EnrollmentService;
 import com.example.demo.service.student.StudentService;
 import com.example.demo.service.teacher.TeacherService;
 import com.example.demo.service.user.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/courses")
 public class CourseController {
+
+    @Autowired
+    private JwtTokenService jwtTokenUtil;
 
     private UserService userService = new UserService() {
         @Override
@@ -67,10 +75,12 @@ public class CourseController {
         }
     };
     @PostMapping("/create")
-    public Course create(@RequestBody Course course){
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetails principal = (UserDetails) authentication.getPrincipal();
-        User user = userService.findByEmail(principal.getUsername());
+    public Course create(@RequestBody Course course, HttpServletRequest httpServletRequest){
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        UserDetails principal = (UserDetails) authentication.getPrincipal();
+//        User user = userService.findByEmail(principal.getUsername());
+        if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatusCode.valueOf(403), "JWT has expired!");
+        User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
 
         if (!user.getRole().toString().equals("TEACHER")) throw new RuntimeException("You are not a teacher!");
         else {
@@ -79,7 +89,8 @@ public class CourseController {
     }
 
     @PostMapping("/complete/{courseId}")
-    public Enrollment completeCourse(@PathVariable Long courseId){
+    public Enrollment completeCourse(@PathVariable Long courseId, HttpServletRequest httpServletRequest){
+        if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatusCode.valueOf(403), "JWT has expired!");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetails principal = (UserDetails) authentication.getPrincipal();
         User user = userService.findByEmail(principal.getUsername());

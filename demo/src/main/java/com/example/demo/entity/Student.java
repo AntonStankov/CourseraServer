@@ -21,10 +21,7 @@ public class Student {
     private Long student_id;
 
     @Column
-    private String firstName;
-
-    @Column
-    private String lastName;
+    private String name;
 
     @OneToOne
     private User user;
