@@ -121,7 +121,7 @@ public class UserController {
 //        return teacherRepository.save(teacher);
 
         teacherService.save(teacher, userService.findByEmail(user.getEmail()));
-        return teacherService.findById(teacher.getTeacher_id(), user.getEmail());
+        return teacherService.findById(teacher.getTeacher_id());
         //Should write validator if email is already registered
 
     }
@@ -169,6 +169,11 @@ public class UserController {
         String email = jwtTokenService.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest));
         User myUser = userService.findByEmail(email);
         return userService.updateUser(user, myUser.getId());
+    }
+
+    @PostMapping("/updateName/teacher")
+    public Teacher updateNames(@RequestBody Teacher teacher){
+        return teacherService.updateTeacher(teacher);
     }
 
 

@@ -33,8 +33,8 @@ public class CoursesTableManager {
         }
 
         @Override
-        public Teacher findById(Long id, String email) {
-            return TeacherService.super.findById(id, email);
+        public Teacher findById(Long id) {
+            return TeacherService.super.findById(id);
         }
 
         @Override

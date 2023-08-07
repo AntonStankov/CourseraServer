@@ -64,10 +64,12 @@ public class TeacherTableManager {
             e.printStackTrace();
         }
     }
-    public Teacher getTeacherById(Long teacherId, String email) {
+    public Teacher getTeacherById(Long teacherId) {
         Teacher teacher = null;
         try (Connection connection = datasource.createConnection()) {
-            String sql = "SELECT * FROM teachers WHERE teacher_id = ?";
+            String sql = "SELECT * FROM teachers  t " +
+                    "JOIN app_users a ON a.id = t.user_id " +
+                    "WHERE teacher_id = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setLong(1, teacherId);
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -75,7 +77,7 @@ public class TeacherTableManager {
                         teacher = new Teacher();
                         teacher.setTeacher_id(resultSet.getLong("teacher_id"));
                         teacher.setName(resultSet.getString("name"));
-                        teacher.setUser(userService.findByEmail(email));
+                        teacher.setUser(userService.findByEmail(resultSet.getString("email")));
                     }
                 }
             }
@@ -107,7 +109,7 @@ public class TeacherTableManager {
         return teacher;
     }
 
-    public void updateTeacher(Teacher teacher) {
+    public Teacher updateTeacher(Teacher teacher) {
         try (Connection connection = datasource.createConnection()) {
             String sql = "UPDATE teachers SET name = ? WHERE teacher_id = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -118,6 +120,8 @@ public class TeacherTableManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
+        return getTeacherById(teacher.getTeacher_id());
     }
 
     public void deleteTeacher(Long teacherId) {
