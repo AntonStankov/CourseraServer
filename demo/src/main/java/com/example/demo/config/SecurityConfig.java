@@ -29,6 +29,7 @@ public class SecurityConfig {
 
         http.csrf(csrf -> csrf.disable());
 
+
         http.authorizeRequests()
                 .requestMatchers("/user/**", "/roles/**", "/test/test", "/group/**", "/document/**", "/folder/**", "/chat", "/topic/messages", "/chat/**", "/user/refresh").authenticated()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
