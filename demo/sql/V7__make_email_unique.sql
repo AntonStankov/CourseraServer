@@ -1,0 +1,2 @@
+ALTER TABLE app_users
+ADD CONSTRAINT UK_email UNIQUE (email);

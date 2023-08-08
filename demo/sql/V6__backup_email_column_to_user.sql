@@ -1,0 +1,5 @@
+ALTER TABLE user_secrets
+DROP COLUMN email;
+
+ALTER TABLE app_users
+ADD COLUMN email VARCHAR(255) NOT NULL;

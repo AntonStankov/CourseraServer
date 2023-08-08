@@ -10,17 +10,17 @@ public interface UserService {
 
     UserTableManager tableManager = new UserTableManager();
 
-    public default User save(User user){
-        return tableManager.insertUser(user);
+    public default User save(User user, String password){
+        return tableManager.insertUser(user, password);
     }
 
     public default User findByEmail(String email){
         return tableManager.getUserByEmail(email);
     }
 
-    public default User updateUser(User user, Long id){
-        return tableManager.updateUser(user, id);
-    }
+//    public default User updateUser(User user, Long id){
+//        return tableManager.updateUser(user, id);
+//    }
 
     public default User findUserById(Long id){
         return tableManager.getUserById(id);

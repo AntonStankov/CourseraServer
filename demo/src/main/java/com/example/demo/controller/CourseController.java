@@ -25,8 +25,8 @@ public class CourseController {
 
     private UserService userService = new UserService() {
         @Override
-        public User save(User user) {
-            return UserService.super.save(user);
+        public User save(User user, String password) {
+            return UserService.super.save(user, password);
         }
 
         @Override

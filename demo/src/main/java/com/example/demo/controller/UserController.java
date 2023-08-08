@@ -1,11 +1,13 @@
 package com.example.demo.controller;
 
+import com.example.demo.entity.UserSecrets;
 import com.example.demo.enums.UserRoleEnum;
 import com.example.demo.entity.Student;
 import com.example.demo.entity.Teacher;
 import com.example.demo.entity.User;
 import com.example.demo.jwt.BlackListService;
 import com.example.demo.jwt.JwtTokenService;
+import com.example.demo.service.secrets.SecretsService;
 import com.example.demo.service.student.StudentService;
 import com.example.demo.service.teacher.TeacherService;
 import com.example.demo.service.user.UserService;
@@ -36,8 +38,8 @@ public class UserController {
 
     private UserService userService = new UserService() {
         @Override
-        public User save(User user) {
-            return UserService.super.save(user);
+        public User save(User user, String password) {
+            return UserService.super.save(user, password);
         }
 
         @Override
@@ -45,10 +47,10 @@ public class UserController {
             return UserService.super.findByEmail(email);
         }
 
-        @Override
-        public User updateUser(User user, Long id) {
-            return UserService.super.updateUser(user, id);
-        }
+//        @Override
+//        public User updateUser(User user, Long id) {
+//            return UserService.super.updateUser(user, id);
+//        }
 
         @Override
         public User findUserById(Long id) {
@@ -70,6 +72,18 @@ public class UserController {
         @Override
         public Student save(Student student, User user) {
             return StudentService.super.save(student, user);
+        }
+    };
+
+    private SecretsService secretsService = new SecretsService() {
+        @Override
+        public UserSecrets save(UserSecrets userSecrets) {
+            return SecretsService.super.save(userSecrets);
+        }
+
+        @Override
+        public UserSecrets findById(Long id) {
+            return SecretsService.super.findById(id);
         }
     };
 
@@ -96,10 +110,9 @@ public class UserController {
     public Student registerStudent(@RequestBody AuthRequest authRequest){
         User user = new User();
         user.setEmail(authRequest.getEmail());
-        user.setPassword(passwordEncoder.encode(authRequest.getPassword()));
         user.setRole(UserRoleEnum.STUDENT);
         user.setTimeCreated(LocalDateTime.now());
-        userService.save(user);
+        userService.save(user, authRequest.getPassword());
 
         Student student = new Student();
         student.setUser(user);
@@ -114,10 +127,9 @@ public class UserController {
         if (authRequest.getRole().toString().equals("STUDENT")){
             User user = new User();
             user.setEmail(authRequest.getEmail());
-            user.setPassword(passwordEncoder.encode(authRequest.getPassword()));
             user.setRole(UserRoleEnum.STUDENT);
             user.setTimeCreated(LocalDateTime.now());
-            userService.save(user);
+            userService.save(user, authRequest.getPassword());
 
             Student student = new Student();
             student.setUser(user);
@@ -129,10 +141,9 @@ public class UserController {
         else {
             User user = new User();
             user.setEmail(authRequest.getEmail());
-            user.setPassword(passwordEncoder.encode(authRequest.getPassword()));
             user.setRole(UserRoleEnum.TEACHER);
             user.setTimeCreated(LocalDateTime.now());
-            userService.save(user);
+            userService.save(user, authRequest.getPassword());
 
             Teacher teacher = new Teacher();
             teacher.setUser(user);
@@ -152,7 +163,8 @@ public class UserController {
     public AuthResponse login(@RequestBody AuthRequest authRequest) {
 
         User user = userService.findByEmail(authRequest.getEmail());
-        if (passwordEncoder.matches(authRequest.getPassword(), user.getPassword())){
+        UserSecrets userSecrets = secretsService.findById(user.getId());
+        if (passwordEncoder.matches(authRequest.getPassword(), userSecrets.getPassword())){
             String token = jwtTokenService.generateToken(user.getEmail());
             String refreshToken = jwtTokenService.generateRefreshToken(authRequest.getEmail());
             return new AuthResponse("", token, refreshToken, user);
@@ -183,12 +195,12 @@ public class UserController {
 
 
     //Other crud operations
-    @PostMapping("/update")
-    public User updateUser(@RequestBody User user, HttpServletRequest httpServletRequest){
-        String email = jwtTokenService.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest));
-        User myUser = userService.findByEmail(email);
-        return userService.updateUser(user, myUser.getId());
-    }
+//    @PostMapping("/update")
+//    public User updateUser(@RequestBody User user, HttpServletRequest httpServletRequest){
+//        String email = jwtTokenService.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest));
+//        User myUser = userService.findByEmail(email);
+//        return userService.updateUser(user, myUser.getId());
+//    }
 
     @PostMapping("/updateName/teacher")
     public Teacher updateNames(@RequestBody Teacher teacher){
