@@ -14,11 +14,15 @@ public interface StudentService {
         return studentTableManager.insertStudent(student, user);
     }
 
-    default Student findById(Long id, String email){
-        return studentTableManager.getStudentById(id, email);
+    default Student findById(Long id){
+        return studentTableManager.getStudentById(id);
     }
 
-    default Student findStudentByUserId(Long userId, String email){
-        return studentTableManager.getStudentByUserId(userId, email);
+    default Student findStudentByUserId(Long userId){
+        return studentTableManager.getStudentByUserId(userId);
+    }
+
+    default Student changeName(String name, Long id){
+        return studentTableManager.updateStudentName(name, id);
     }
 }

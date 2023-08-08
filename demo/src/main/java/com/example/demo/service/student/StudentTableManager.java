@@ -63,10 +63,12 @@ public class StudentTableManager {
         }
     }
 
-    public Student getStudentById(Long studentId, String email) {
+    public Student getStudentById(Long studentId) {
         Student student = null;
         try (Connection connection = datasource.createConnection()) {
-            String sql = "SELECT * FROM students WHERE student_id = ?";
+            String sql = "SELECT * FROM students s " +
+                    "JOIN app_users a ON s.user_id = a.id " +
+                    "WHERE student_id = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setLong(1, studentId);
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -74,7 +76,7 @@ public class StudentTableManager {
                         student = new Student();
                         student.setStudent_id(resultSet.getLong("student_id"));
                         student.setName(resultSet.getString("name"));
-                        student.setUser(userService.findByEmail(email));
+                        student.setUser(userService.findByEmail(resultSet.getString("email")));
                     }
                 }
             }
@@ -85,10 +87,12 @@ public class StudentTableManager {
     }
 
 
-    public Student getStudentByUserId(Long userId, String email) {
+    public Student getStudentByUserId(Long userId) {
         Student student = null;
         try (Connection connection = datasource.createConnection()) {
-            String sql = "SELECT * FROM students WHERE user_id = ?";
+            String sql = "SELECT * FROM students s " +
+                    "JOIN app_users a ON s.user_id = a.id " +
+                    "WHERE user_id = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setLong(1, userId);
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -96,7 +100,7 @@ public class StudentTableManager {
                         student = new Student();
                         student.setStudent_id(resultSet.getLong("student_id"));
                         student.setName(resultSet.getString("name"));
-                        student.setUser(userService.findByEmail(email));
+                        student.setUser(userService.findByEmail(resultSet.getString("email")));
                     }
                 }
             }
@@ -106,17 +110,18 @@ public class StudentTableManager {
         return student;
     }
 
-    public void updateStudentName(Student student) {
+    public Student updateStudentName(String name, Long id) {
         try (Connection connection = datasource.createConnection()) {
             String sql = "UPDATE students SET name = ? WHERE student_id = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setString(1, student.getName());
-                preparedStatement.setLong(2, student.getStudent_id());
+                preparedStatement.setString(1, name);
+                preparedStatement.setLong(2, id);
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return getStudentById(id);
     }
 
     public void deleteTeacher(Long studentId) {

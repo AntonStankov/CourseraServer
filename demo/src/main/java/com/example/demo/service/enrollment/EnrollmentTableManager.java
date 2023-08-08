@@ -35,8 +35,8 @@ public class EnrollmentTableManager {
         }
 
         @Override
-        public Student findById(Long id, String email) {
-            return StudentService.super.findById(id, email);
+        public Student findById(Long id) {
+            return StudentService.super.findById(id);
         }
     };
 

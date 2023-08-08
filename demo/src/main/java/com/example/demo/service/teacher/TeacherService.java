@@ -18,11 +18,11 @@ public interface TeacherService {
         return teacherTableManager.getTeacherById(id);
     }
 
-    public default Teacher findByUserId(Long userId, String email){
-        return teacherTableManager.getTeacherByUserId(userId, email);
+    public default Teacher findByUserId(Long userId){
+        return teacherTableManager.getTeacherByUserId(userId);
     }
 
-    public default Teacher updateTeacher(Teacher teacher){
-        return teacherTableManager.updateTeacher(teacher);
+    public default Teacher updateTeacher(String name, Long id){
+        return teacherTableManager.updateInfo(name, id);
     }
 }

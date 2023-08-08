@@ -75,6 +75,21 @@ public class UserController {
         public Student save(Student student, User user) {
             return StudentService.super.save(student, user);
         }
+
+        @Override
+        public Student findById(Long id) {
+            return StudentService.super.findById(id);
+        }
+
+        @Override
+        public Student findStudentByUserId(Long userId) {
+            return StudentService.super.findStudentByUserId(userId);
+        }
+
+        @Override
+        public Student changeName(String name, Long id) {
+            return StudentService.super.changeName(name, id);
+        }
     };
 
     private SecretsService secretsService = new SecretsService() {
@@ -121,7 +136,7 @@ public class UserController {
         student.setName(authRequest.getName());
 
         studentService.save(student, userService.findByEmail(user.getEmail()));
-        return studentService.findById(student.getStudent_id(), user.getEmail());
+        return studentService.findById(student.getStudent_id());
     }
 
     @PostMapping("/register")
@@ -140,7 +155,7 @@ public class UserController {
             student.setName(authRequest.getName());
 
             studentService.save(student, userService.findByEmail(user.getEmail()));
-            return studentService.findById(student.getStudent_id(), user.getEmail());
+            return studentService.findById(student.getStudent_id());
         }
         else {
             User user = new User();
@@ -185,6 +200,7 @@ public class UserController {
         return new AuthResponse("", newToken, refreshToken, userService.findByEmail(email));
     }
 
+    @CrossOrigin(origins = "http://localhost:5173")
     @GetMapping("/logout")
     public String logout(HttpServletRequest httpServletRequest){
         String token = jwtTokenService.getTokenFromRequest(httpServletRequest);
@@ -206,9 +222,19 @@ public class UserController {
 //        return userService.updateUser(user, myUser.getId());
 //    }
 
-    @PostMapping("/updateName/teacher")
-    public Teacher updateNames(@RequestBody Teacher teacher){
-        return teacherService.updateTeacher(teacher);
+    @PostMapping("/updateName")
+    public Object updateNames(@RequestBody String name, HttpServletRequest httpServletRequest){
+        User user = userService.findByEmail(jwtTokenService.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
+        if (user.getRole().toString().equals("TEACHER")){
+            Teacher teacher = teacherService.findByUserId(user.getId());
+            return teacherService.updateTeacher(name, teacher.getTeacher_id());
+        }
+        else if(user.getRole().toString().equals("STUDENT")){
+            Student student = studentService.findStudentByUserId(user.getId());
+            return studentService.changeName(name, student.getStudent_id());
+        }
+        return null;
+
     }
 
     @PostMapping("/changeEmail")

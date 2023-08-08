@@ -43,13 +43,13 @@ public class CourseController {
         }
 
         @Override
-        public Student findById(Long id, String email) {
-            return StudentService.super.findById(id, email);
+        public Student findById(Long id) {
+            return StudentService.super.findById(id);
         }
 
         @Override
-        public Student findStudentByUserId(Long userId, String email) {
-            return StudentService.super.findStudentByUserId(userId, email);
+        public Student findStudentByUserId(Long userId) {
+            return StudentService.super.findStudentByUserId(userId);
         }
     };
 
@@ -62,8 +62,8 @@ public class CourseController {
 
     private TeacherService teacherService = new TeacherService() {
         @Override
-        public Teacher findByUserId(Long userId, String email) {
-            return TeacherService.super.findByUserId(userId, email);
+        public Teacher findByUserId(Long userId) {
+            return TeacherService.super.findByUserId(userId);
         }
     };
 
@@ -85,7 +85,7 @@ public class CourseController {
 
         if (!user.getRole().toString().equals("TEACHER")) throw new RuntimeException("You are not a teacher!");
         else {
-            return courseService.create(course, teacherService.findByUserId(user.getId(), user.getEmail()));
+            return courseService.create(course, teacherService.findByUserId(user.getId()));
         }
     }
 
@@ -98,7 +98,7 @@ public class CourseController {
 
         if (!user.getRole().toString().equals("STUDENT")) throw new RuntimeException("You are not a student!");
         else {
-            return enrollmentService.save(studentService.findStudentByUserId(user.getId(), user.getEmail()).getStudent_id(), courseId);
+            return enrollmentService.save(studentService.findStudentByUserId(user.getId()).getStudent_id(), courseId);
         }
     }
 }

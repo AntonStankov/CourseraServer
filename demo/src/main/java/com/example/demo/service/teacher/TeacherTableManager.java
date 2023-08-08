@@ -88,10 +88,12 @@ public class TeacherTableManager {
     }
 
 
-    public Teacher getTeacherByUserId(Long userId, String email) {
+    public Teacher getTeacherByUserId(Long userId) {
         Teacher teacher = null;
         try (Connection connection = datasource.createConnection()) {
-            String sql = "SELECT * FROM teachers WHERE user_id = ?";
+            String sql = "SELECT * FROM teachers t " +
+                    "JOIN app_users a ON t.user_id = a.id " +
+                    "WHERE user_id = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setLong(1, userId);
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -99,7 +101,7 @@ public class TeacherTableManager {
                         teacher = new Teacher();
                         teacher.setTeacher_id(resultSet.getLong("teacher_id"));
                         teacher.setName(resultSet.getString("name"));
-                        teacher.setUser(userService.findByEmail(email));
+                        teacher.setUser(userService.findByEmail(resultSet.getString("email")));
                     }
                 }
             }
@@ -109,19 +111,19 @@ public class TeacherTableManager {
         return teacher;
     }
 
-    public Teacher updateTeacher(Teacher teacher) {
+    public Teacher updateInfo(String name, Long id) {
         try (Connection connection = datasource.createConnection()) {
             String sql = "UPDATE teachers SET name = ? WHERE teacher_id = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setString(1, teacher.getName());
-                preparedStatement.setLong(2, teacher.getTeacher_id());
+                preparedStatement.setString(1, name);
+                preparedStatement.setLong(2, id);
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        return getTeacherById(teacher.getTeacher_id());
+        return getTeacherById(id);
     }
 
     public void deleteTeacher(Long teacherId) {
