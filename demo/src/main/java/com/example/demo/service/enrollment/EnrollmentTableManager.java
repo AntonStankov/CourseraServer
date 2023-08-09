@@ -23,8 +23,8 @@ public class EnrollmentTableManager {
 
     private CourseService courseService = new CourseService() {
         @Override
-        public Course findById(Long courseId, Long userId, String email) {
-            return CourseService.super.findById(courseId, userId, email);
+        public Course findById(Long courseId) {
+            return CourseService.super.findById(courseId);
         }
     };
 
@@ -51,7 +51,8 @@ public class EnrollmentTableManager {
                 preparedStatement.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
                 int affectedRows = preparedStatement.executeUpdate();
 
-
+                int credit = courseService.findById(courseId).getCredit();
+                studentService.addCredit(studentId, credit);
                 if (affectedRows > 0) {
                     ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
                     if (generatedKeys.next()) {
@@ -108,6 +109,7 @@ public class EnrollmentTableManager {
                         Student student = new Student();
                         student.setStudent_id(resultSet.getLong("student_id"));
                         student.setName(resultSet.getString("name"));
+                        student.setCredit(resultSet.getLong("credit"));
                         enrollment.setStudent(student);
                         Course course = new Course();
                         course.setCourseId(resultSet.getLong("courseId"));

@@ -10,6 +10,8 @@ import com.example.demo.service.user.UserService;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Repository
 public class CoursesTableManager {
@@ -45,6 +47,7 @@ public class CoursesTableManager {
 
     private final DataSource datasource = new DataSource();
     public Course insertCourse(Course course, Teacher teacher) {
+        Long generatedCourseId = null;
         try (Connection connection = datasource.createConnection()) {
             String sql = "INSERT INTO courses (courseName, credit) VALUES (?, ?)";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -55,7 +58,7 @@ public class CoursesTableManager {
                 if (affectedRows > 0) {
                     ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
                     if (generatedKeys.next()) {
-                        Long generatedCourseId = generatedKeys.getLong(1);
+                        generatedCourseId = generatedKeys.getLong(1);
                         course.setCourseId(generatedCourseId);
                     }
                 }
@@ -67,7 +70,7 @@ public class CoursesTableManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return course;
+        return getCourseById(generatedCourseId);
     }
 
     private void associateCourseWithTeacher(Connection connection, Long courseId, Long teacherId) {
@@ -80,7 +83,7 @@ public class CoursesTableManager {
             e.printStackTrace();
         }
     }
-    public Course getCourseById(Long courseId, Long userId, String email) {
+    public Course getCourseById(Long courseId) {
         Course course = null;
         try (Connection connection = datasource.createConnection()) {
             String sql = "SELECT c.*, t.* FROM courses c " +
@@ -136,6 +139,33 @@ public class CoursesTableManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public List<Course> findUncompletedCourses(Long userId){
+        List<Course> courses = new ArrayList<Course>();
+        try (Connection connection = datasource.createConnection()) {
+            String sql = "SELECT * FROM courses c " +
+                    "JOIN teachers t ON t.teacher_id = c.teacher_id " +
+                    "WHERE NOT EXISTS " +
+                    "(SELECT * FROM enrollment e " +
+                    "WHERE e.student_id = ? AND e.course_id = c.courseId)";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setLong(1, userId);
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    while (resultSet.next()) {
+                        Course course = new Course();
+                        course.setCourseId(resultSet.getLong("courseId"));
+                        course.setCourseName(resultSet.getString("courseName"));
+                        course.setCredit(resultSet.getInt("credit"));
+                        course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
+                        courses.add(course);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return courses;
     }
 
 }

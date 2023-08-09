@@ -26,4 +26,7 @@ public class Student {
     @OneToOne
     private User user;
 
+    @Column
+    private Long credit;
+
 }

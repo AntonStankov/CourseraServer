@@ -16,6 +16,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/courses")
@@ -57,6 +59,16 @@ public class CourseController {
         @Override
         public Course create(Course course, Teacher teacher) {
             return CourseService.super.create(course, teacher);
+        }
+
+        @Override
+        public Course findById(Long courseId) {
+            return CourseService.super.findById(courseId);
+        }
+
+        @Override
+        public List<Course> findUncompleteCourses(Long userId) {
+            return CourseService.super.findUncompleteCourses(userId);
         }
     };
 
@@ -100,5 +112,22 @@ public class CourseController {
         else {
             return enrollmentService.save(studentService.findStudentByUserId(user.getId()).getStudent_id(), courseId);
         }
+    }
+
+    @GetMapping("/uncompleted")
+    public List<Course> findUncompletedCourses(HttpServletRequest httpServletRequest){
+        User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
+        System.out.println(user.getId());
+        if (!user.getRole().toString().equals("STUDENT")) throw new RuntimeException("You are not a student!");
+        else {
+            return courseService.findUncompleteCourses(studentService.findStudentByUserId(user.getId()).getStudent_id());
+        }
+    }
+
+    @GetMapping("test")
+    public Teacher test(HttpServletRequest httpServletRequest){
+        User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
+        Teacher teacher = teacherService.findByUserId(user.getId());
+        return teacher;
     }
 }

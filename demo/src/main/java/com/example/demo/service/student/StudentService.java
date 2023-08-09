@@ -25,4 +25,8 @@ public interface StudentService {
     default Student changeName(String name, Long id){
         return studentTableManager.updateStudentName(name, id);
     }
+
+    default void addCredit(Long studentId, int credit){
+        studentTableManager.addCredit(studentId, credit);
+    }
 }

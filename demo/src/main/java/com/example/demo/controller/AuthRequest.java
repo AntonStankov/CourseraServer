@@ -3,8 +3,10 @@ package com.example.demo.controller;
 
 import com.example.demo.enums.UserRoleEnum;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
+@Setter
 
 public class AuthRequest {
     private String email;

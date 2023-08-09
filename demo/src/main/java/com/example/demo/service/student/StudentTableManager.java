@@ -77,6 +77,7 @@ public class StudentTableManager {
                         student.setStudent_id(resultSet.getLong("student_id"));
                         student.setName(resultSet.getString("name"));
                         student.setUser(userService.findByEmail(resultSet.getString("email")));
+                        student.setCredit(resultSet.getLong("credit"));
                     }
                 }
             }
@@ -101,6 +102,7 @@ public class StudentTableManager {
                         student.setStudent_id(resultSet.getLong("student_id"));
                         student.setName(resultSet.getString("name"));
                         student.setUser(userService.findByEmail(resultSet.getString("email")));
+                        student.setCredit(resultSet.getLong("credit"));
                     }
                 }
             }
@@ -129,6 +131,20 @@ public class StudentTableManager {
             String sql = "DELETE FROM students WHERE student_id = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setLong(1, studentId);
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void addCredit(Long studentId, int credit){
+        try (Connection connection = datasource.createConnection()) {
+            String sql = "UPDATE students SET credit = ? WHERE student_id = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                Student student = getStudentById(studentId);
+                preparedStatement.setLong(1, student.getCredit() + credit);
+                preparedStatement.setLong(2, studentId);
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException e) {

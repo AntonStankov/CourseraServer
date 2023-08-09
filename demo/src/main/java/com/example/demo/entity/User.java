@@ -19,9 +19,6 @@ public class User {
     @Column
     private Long id;
 
-//    @Column(nullable = false)
-//    private String password;
-//
     @Column(unique = true, nullable = false)
     private String email;
 
@@ -31,5 +28,7 @@ public class User {
 
     @Column
     private LocalDateTime timeCreated;
+
+
 
 }

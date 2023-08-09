@@ -123,22 +123,6 @@ public class UserController {
     public UserController() {
     }
 
-    @PostMapping("/register/student")
-    public Student registerStudent(@RequestBody AuthRequest authRequest){
-        User user = new User();
-        user.setEmail(authRequest.getEmail());
-        user.setRole(UserRoleEnum.STUDENT);
-        user.setTimeCreated(LocalDateTime.now());
-        userService.save(user, authRequest.getPassword());
-
-        Student student = new Student();
-        student.setUser(user);
-        student.setName(authRequest.getName());
-
-        studentService.save(student, userService.findByEmail(user.getEmail()));
-        return studentService.findById(student.getStudent_id());
-    }
-
     @PostMapping("/register")
     public Object register(@RequestBody AuthRequest authRequest){
         if (userService.findByEmail(authRequest.getEmail()) != null) return ResponseEntity.status(HttpStatus.BAD_REQUEST_400)
@@ -174,10 +158,6 @@ public class UserController {
     }
 
 
-//
-//
-//
-//
     @PostMapping("/login")
     public Object login(@RequestBody AuthRequest authRequest) {
 
@@ -212,15 +192,6 @@ public class UserController {
     public String hello(){
         return "hello user";
     }
-
-
-    //Other crud operations
-//    @PostMapping("/update")
-//    public User updateUser(@RequestBody User user, HttpServletRequest httpServletRequest){
-//        String email = jwtTokenService.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest));
-//        User myUser = userService.findByEmail(email);
-//        return userService.updateUser(user, myUser.getId());
-//    }
 
     @PostMapping("/updateName")
     public Object updateNames(@RequestBody String name, HttpServletRequest httpServletRequest){

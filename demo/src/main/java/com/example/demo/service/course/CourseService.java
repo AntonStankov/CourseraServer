@@ -5,6 +5,8 @@ import com.example.demo.entity.Course;
 import com.example.demo.entity.Teacher;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public interface CourseService {
     CoursesTableManager coursesTableManager = new CoursesTableManager();
@@ -13,7 +15,11 @@ public interface CourseService {
         return coursesTableManager.insertCourse(course, teacher);
     }
 
-    public default Course findById(Long courseId, Long userId, String email){
-        return coursesTableManager.getCourseById(courseId, userId, email);
+    public default Course findById(Long courseId){
+        return coursesTableManager.getCourseById(courseId);
+    }
+
+    public default List<Course> findUncompleteCourses(Long userId){
+        return coursesTableManager.findUncompletedCourses(userId);
     }
 }
