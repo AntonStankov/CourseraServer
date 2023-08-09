@@ -9,6 +9,7 @@ import com.example.demo.service.teacher.TeacherService;
 import com.example.demo.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -116,11 +117,21 @@ public class CourseController {
 
     @GetMapping("/uncompleted")
     public PaginationResponse findUncompletedCourses(@RequestBody PaginationRequest paginationRequest, HttpServletRequest httpServletRequest){
+        if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "JWT Token has expired!");
         User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
         System.out.println(user.getId());
         if (!user.getRole().toString().equals("STUDENT")) throw new RuntimeException("You are not a student!");
         else {
             return courseService.findUncompleteCourses(studentService.findStudentByUserId(user.getId()).getStudent_id(), paginationRequest.getPage(), paginationRequest.getPageSize());
+        }
+    }
+
+    @GetMapping("/completed")
+    public List<Course> completed(@RequestBody PaginationRequest paginationRequest,  HttpServletRequest httpServletRequest){
+        User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
+        if (!user.getRole().toString().equals("STUDENT")) throw new RuntimeException("You are not a student!");
+        else {
+            return courseService.findCompleteCourses(studentService.findStudentByUserId(user.getId()).getStudent_id(), paginationRequest.getPage(), paginationRequest.getPageSize());
         }
     }
 }
