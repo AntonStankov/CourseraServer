@@ -67,8 +67,8 @@ public class CourseController {
         }
 
         @Override
-        public List<Course> findUncompleteCourses(Long userId) {
-            return CourseService.super.findUncompleteCourses(userId);
+        public List<Course> findUncompleteCourses(Long userId, int page, int pageSize) {
+            return CourseService.super.findUncompleteCourses(userId, page, pageSize);
         }
     };
 
@@ -115,12 +115,12 @@ public class CourseController {
     }
 
     @GetMapping("/uncompleted")
-    public List<Course> findUncompletedCourses(HttpServletRequest httpServletRequest){
+    public List<Course> findUncompletedCourses(@RequestBody PaginationRequest paginationRequest, HttpServletRequest httpServletRequest){
         User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
         System.out.println(user.getId());
         if (!user.getRole().toString().equals("STUDENT")) throw new RuntimeException("You are not a student!");
         else {
-            return courseService.findUncompleteCourses(studentService.findStudentByUserId(user.getId()).getStudent_id());
+            return courseService.findUncompleteCourses(studentService.findStudentByUserId(user.getId()).getStudent_id(), paginationRequest.getPage(), paginationRequest.getPageSize());
         }
     }
 

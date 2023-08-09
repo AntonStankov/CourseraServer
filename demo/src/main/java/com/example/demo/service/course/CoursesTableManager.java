@@ -141,16 +141,19 @@ public class CoursesTableManager {
         }
     }
 
-    public List<Course> findUncompletedCourses(Long userId){
+    public List<Course> findUncompletedCourses(Long userId,  int page, int pageSize){
         List<Course> courses = new ArrayList<Course>();
         try (Connection connection = datasource.createConnection()) {
             String sql = "SELECT * FROM courses c " +
                     "JOIN teachers t ON t.teacher_id = c.teacher_id " +
                     "WHERE NOT EXISTS " +
                     "(SELECT * FROM enrollment e " +
-                    "WHERE e.student_id = ? AND e.course_id = c.courseId)";
+                    "WHERE e.student_id = ? AND e.course_id = c.courseId) " +
+                    "LIMIT ? OFFSET ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setLong(1, userId);
+                preparedStatement.setInt(2, pageSize);
+                preparedStatement.setInt(3, (page - 1) * pageSize);
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     while (resultSet.next()) {
                         Course course = new Course();

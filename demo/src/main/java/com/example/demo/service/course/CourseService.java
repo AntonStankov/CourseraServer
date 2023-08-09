@@ -19,7 +19,7 @@ public interface CourseService {
         return coursesTableManager.getCourseById(courseId);
     }
 
-    public default List<Course> findUncompleteCourses(Long userId){
-        return coursesTableManager.findUncompletedCourses(userId);
+    public default List<Course> findUncompleteCourses(Long userId, int page, int pageSize){
+        return coursesTableManager.findUncompletedCourses(userId, page, pageSize);
     }
 }
