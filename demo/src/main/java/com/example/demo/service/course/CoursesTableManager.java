@@ -2,6 +2,7 @@ package com.example.demo.service.course;
 
 
 import com.example.demo.config.DataSource;
+import com.example.demo.controller.PaginationResponse;
 import com.example.demo.entity.Course;
 import com.example.demo.entity.Teacher;
 import com.example.demo.entity.User;
@@ -141,20 +142,41 @@ public class CoursesTableManager {
         }
     }
 
-    public List<Course> findUncompletedCourses(Long userId,  int page, int pageSize){
+    public PaginationResponse findUncompletedCourses(Long userId, int page, int pageSize) {
+        Long totalSavings = 0L;
         List<Course> courses = new ArrayList<Course>();
+
         try (Connection connection = datasource.createConnection()) {
-            String sql = "SELECT * FROM courses c " +
+            // Count the total number of savings
+            String countSql = "SELECT COUNT(*) AS savings_count FROM courses c " +
+                    "JOIN teachers t ON t.teacher_id = c.teacher_id " +
+                    "WHERE NOT EXISTS " +
+                    "(SELECT * FROM enrollment e " +
+                    "WHERE e.student_id = ? AND e.course_id = c.courseId)";
+
+            try (PreparedStatement countStatement = connection.prepareStatement(countSql)) {
+                countStatement.setLong(1, userId);
+                try (ResultSet countResultSet = countStatement.executeQuery()) {
+                    if (countResultSet.next()) {
+                        totalSavings = countResultSet.getLong("savings_count");
+                    }
+                }
+            }
+
+            // Retrieve the courses for the specified page
+            String dataSql = "SELECT * FROM courses c " +
                     "JOIN teachers t ON t.teacher_id = c.teacher_id " +
                     "WHERE NOT EXISTS " +
                     "(SELECT * FROM enrollment e " +
                     "WHERE e.student_id = ? AND e.course_id = c.courseId) " +
                     "LIMIT ? OFFSET ?";
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setLong(1, userId);
-                preparedStatement.setInt(2, pageSize);
-                preparedStatement.setInt(3, (page - 1) * pageSize);
-                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+
+            try (PreparedStatement dataStatement = connection.prepareStatement(dataSql)) {
+                dataStatement.setLong(1, userId);
+                dataStatement.setInt(2, pageSize);
+                dataStatement.setInt(3, (page - 1) * pageSize);
+
+                try (ResultSet resultSet = dataStatement.executeQuery()) {
                     while (resultSet.next()) {
                         Course course = new Course();
                         course.setCourseId(resultSet.getLong("courseId"));
@@ -168,7 +190,8 @@ public class CoursesTableManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return courses;
+
+        return new PaginationResponse(totalSavings + 1, courses);
     }
 
 }
