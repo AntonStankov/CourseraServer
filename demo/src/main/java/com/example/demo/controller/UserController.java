@@ -209,10 +209,12 @@ public class UserController {
     }
 
     @PostMapping("/changeEmail")
-    public User changeEmail(@RequestBody User user, HttpServletRequest httpServletRequest){
+    public User changeEmail(@RequestBody String email, HttpServletRequest httpServletRequest){
+        User myuser = userService.findByEmail(jwtTokenService.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
         if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatusCode.valueOf(403), "JWT has expired!");
-        return userService.changeEmil(user.getId(), user.getEmail());
+        return userService.changeEmil(myuser.getId(), email);
     }
+
 
 
 }

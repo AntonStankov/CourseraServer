@@ -12,4 +12,6 @@ public class BeanConfig {
     public BlackListService blackListService() {
         return new BlackListServiceImpl();
     }
+
+
 }
