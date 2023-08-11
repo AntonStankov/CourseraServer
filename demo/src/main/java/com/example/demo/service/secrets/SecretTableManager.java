@@ -80,4 +80,19 @@ public class SecretTableManager {
         }
         return user;
     }
+
+    public UserSecrets updateSecrets(String password, Long id) {
+        UserSecrets user = new UserSecrets();
+        try (Connection connection = datasource.createConnection()) {
+            String sql = "UPDATE user_secrets SET password = ? WHERE user_id = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, passwordEncoder.encode(password));
+                preparedStatement.setLong(2, id);
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return user;
+    }
 }

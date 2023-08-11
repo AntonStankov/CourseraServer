@@ -102,6 +102,11 @@ public class UserController {
         public UserSecrets findById(Long id) {
             return SecretsService.super.findById(id);
         }
+
+        @Override
+        public void changePassword(String password, Long userId) {
+            SecretsService.super.changePassword(password, userId);
+        }
     };
 
 
@@ -215,6 +220,9 @@ public class UserController {
         return userService.changeEmil(myuser.getId(), email);
     }
 
-
+    @PostMapping("/changePassword")
+    public void changePassword(@RequestBody String password, HttpServletRequest httpServletRequest){
+        secretsService.changePassword(password, userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest))).getId());
+    }
 
 }
