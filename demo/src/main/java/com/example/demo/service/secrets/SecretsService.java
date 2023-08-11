@@ -16,4 +16,8 @@ public interface SecretsService {
     public default UserSecrets findById(Long id){
         return secretTableManager.getSecretsById(id);
     }
+
+    public default void changePassword(String password, Long userId){
+        secretTableManager.updateSecrets(password, userId);
+    }
 }
