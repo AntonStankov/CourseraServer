@@ -221,8 +221,13 @@ public class UserController {
     }
 
     @PostMapping("/changePassword")
-    public void changePassword(@RequestBody String password, HttpServletRequest httpServletRequest){
-        secretsService.changePassword(password, userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest))).getId());
+    public void changePassword(@RequestBody ChangePasswordRequest request, HttpServletRequest httpServletRequest){
+        User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
+        UserSecrets userSecrets = secretsService.findById(user.getId());
+        if (passwordEncoder.matches(request.getCurrentPassword(), userSecrets.getPassword())){
+            secretsService.changePassword(request.getPassword(), userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest))).getId());
+        }
+        else throw new RuntimeException("Wrong password!");
     }
 
 }
