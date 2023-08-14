@@ -189,7 +189,7 @@ public class CoursesTableManager {
             e.printStackTrace();
         }
 
-        return new PaginationResponse(totalSavings + 1, courses);
+        return new PaginationResponse(totalSavings, courses);
     }
 
 
