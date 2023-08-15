@@ -50,10 +50,11 @@ public class CoursesTableManager {
     public Course insertCourse(Course course, Teacher teacher) {
         Long generatedCourseId = null;
         try (Connection connection = datasource.createConnection()) {
-            String sql = "INSERT INTO courses (courseName, credit) VALUES (?, ?)";
+            String sql = "INSERT INTO courses (courseName, description, credit) VALUES (?, ?, ?)";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 preparedStatement.setString(1, course.getCourseName());
-                preparedStatement.setInt(2, course.getCredit());
+                preparedStatement.setString(2, course.getDescription());
+                preparedStatement.setInt(3, course.getCredit());
                 int affectedRows = preparedStatement.executeUpdate();
 
                 if (affectedRows > 0) {
@@ -98,6 +99,7 @@ public class CoursesTableManager {
                         course.setCourseId(resultSet.getLong("courseId"));
                         course.setCourseName(resultSet.getString("courseName"));
                         course.setCredit(resultSet.getInt("credit"));
+                        course.setDescription(resultSet.getString("description"));
 
                         // Create a Teacher object and set its attributes
                         Teacher teacher = new Teacher();
@@ -118,11 +120,12 @@ public class CoursesTableManager {
 
     public void updateCourse(Course course) {
         try (Connection connection = datasource.createConnection()) {
-            String sql = "UPDATE courses SET courseName = ? credit = ? WHERE courseId = ?";
+            String sql = "UPDATE courses SET courseName = ? description = ? credit = ? WHERE courseId = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, course.getCourseName());
-                preparedStatement.setInt(2, course.getCredit());
-                preparedStatement.setLong(3, course.getCourseId());
+                preparedStatement.setString(2, course.getDescription());
+                preparedStatement.setInt(3, course.getCredit());
+                preparedStatement.setLong(4, course.getCourseId());
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException e) {
@@ -179,6 +182,7 @@ public class CoursesTableManager {
                         Course course = new Course();
                         course.setCourseId(resultSet.getLong("courseId"));
                         course.setCourseName(resultSet.getString("courseName"));
+                        course.setDescription(resultSet.getString("description"));
                         course.setCredit(resultSet.getInt("credit"));
                         course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
                         courses.add(course);
@@ -213,6 +217,7 @@ public class CoursesTableManager {
                         course.setCourseId(resultSet.getLong("courseId"));
                         course.setCourseName(resultSet.getString("courseName"));
                         course.setCredit(resultSet.getInt("credit"));
+                        course.setDescription(resultSet.getString("description"));
                         course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
                         courses.add(course);
                     }
