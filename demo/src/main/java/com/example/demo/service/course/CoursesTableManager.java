@@ -50,11 +50,12 @@ public class CoursesTableManager {
     public Course insertCourse(Course course, Teacher teacher) {
         Long generatedCourseId = null;
         try (Connection connection = datasource.createConnection()) {
-            String sql = "INSERT INTO courses (courseName, description, credit) VALUES (?, ?, ?)";
+            String sql = "INSERT INTO courses (courseName, description, duration, credit) VALUES (?, ?, ?, ?)";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 preparedStatement.setString(1, course.getCourseName());
                 preparedStatement.setString(2, course.getDescription());
-                preparedStatement.setInt(3, course.getCredit());
+                preparedStatement.setLong(3, course.getDuration());
+                preparedStatement.setInt(4, course.getCredit());
                 int affectedRows = preparedStatement.executeUpdate();
 
                 if (affectedRows > 0) {
