@@ -230,4 +230,18 @@ public class UserController {
         else throw new RuntimeException("Wrong password!");
     }
 
+    @GetMapping("/getProfile")
+    public Object getProfile(HttpServletRequest httpServletRequest){
+        User user = userService.findByEmail(jwtTokenService.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
+        if (user.getRole().toString().equals("STUDENT")){
+            Student student = studentService.findStudentByUserId(user.getId());
+            return new ProfileResponse(student.getName(), user.getEmail(), user.getRole(), user.getTimeCreated(), student.getCredit());
+        }
+        else if (user.getRole().toString().equals("TEACHER")){
+            Teacher teacher = teacherService.findByUserId(user.getId());
+            return new ProfileResponse(teacher.getName(), user.getEmail(), user.getRole(), user.getTimeCreated());
+        }
+        else throw new RuntimeException("No user with this ID!");
+    }
+
 }
