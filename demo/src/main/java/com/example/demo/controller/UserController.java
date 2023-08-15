@@ -199,25 +199,25 @@ public class UserController {
     }
 
     @PostMapping("/updateName")
-    public Object updateNames(@RequestBody String name, HttpServletRequest httpServletRequest){
+    public Object updateNames(@RequestBody AuthRequest authRequest, HttpServletRequest httpServletRequest){
         User user = userService.findByEmail(jwtTokenService.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
         if (user.getRole().toString().equals("TEACHER")){
             Teacher teacher = teacherService.findByUserId(user.getId());
-            return teacherService.updateTeacher(name, teacher.getTeacher_id());
+            return teacherService.updateTeacher(authRequest.getName(), teacher.getTeacher_id());
         }
         else if(user.getRole().toString().equals("STUDENT")){
             Student student = studentService.findStudentByUserId(user.getId());
-            return studentService.changeName(name, student.getStudent_id());
+            return studentService.changeName(authRequest.getName(), student.getStudent_id());
         }
         return null;
 
     }
 
     @PostMapping("/changeEmail")
-    public User changeEmail(@RequestBody String email, HttpServletRequest httpServletRequest){
+    public User changeEmail(@RequestBody AuthRequest authRequest, HttpServletRequest httpServletRequest){
         User myuser = userService.findByEmail(jwtTokenService.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
         if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatusCode.valueOf(403), "JWT has expired!");
-        return userService.changeEmil(myuser.getId(), email);
+        return userService.changeEmil(myuser.getId(), authRequest.getEmail());
     }
 
     @PostMapping("/changePassword")
