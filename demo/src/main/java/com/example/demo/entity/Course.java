@@ -30,5 +30,8 @@ public class Course {
     private String description;
 
     @Column
+    private Long duration;
+
+    @Column
     private int credit;
 }

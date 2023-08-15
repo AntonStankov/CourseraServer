@@ -100,6 +100,7 @@ public class CoursesTableManager {
                         course.setCourseName(resultSet.getString("courseName"));
                         course.setCredit(resultSet.getInt("credit"));
                         course.setDescription(resultSet.getString("description"));
+                        course.setDuration(resultSet.getLong("duration"));
 
                         // Create a Teacher object and set its attributes
                         Teacher teacher = new Teacher();
@@ -183,6 +184,7 @@ public class CoursesTableManager {
                         course.setCourseId(resultSet.getLong("courseId"));
                         course.setCourseName(resultSet.getString("courseName"));
                         course.setDescription(resultSet.getString("description"));
+                        course.setDuration(resultSet.getLong("duration"));
                         course.setCredit(resultSet.getInt("credit"));
                         course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
                         courses.add(course);
@@ -218,6 +220,7 @@ public class CoursesTableManager {
                         course.setCourseName(resultSet.getString("courseName"));
                         course.setCredit(resultSet.getInt("credit"));
                         course.setDescription(resultSet.getString("description"));
+                        course.setDuration(resultSet.getLong("duration"));
                         course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
                         courses.add(course);
                     }
