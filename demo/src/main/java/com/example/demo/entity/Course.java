@@ -24,8 +24,11 @@ public class Course {
     private Teacher teacher;
 
     @Column
-    String courseName;
+    private String courseName;
 
     @Column
-    int credit;
+    private String description;
+
+    @Column
+    private int credit;
 }
