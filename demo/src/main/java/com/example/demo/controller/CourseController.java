@@ -127,12 +127,12 @@ public class CourseController {
     }
 
     @GetMapping("/completed")
-    public List<Course> completed(@RequestBody PaginationRequest paginationRequest,  HttpServletRequest httpServletRequest){
+    public List<Course> completed(@RequestParam int page, @RequestParam int pageSize,  HttpServletRequest httpServletRequest){
         if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "JWT Token has expired!");
         User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
         if (!user.getRole().toString().equals("STUDENT")) throw new RuntimeException("You are not a student!");
         else {
-            return courseService.findCompleteCourses(studentService.findStudentByUserId(user.getId()).getStudent_id(), paginationRequest.getPage(), paginationRequest.getPageSize());
+            return courseService.findCompleteCourses(studentService.findStudentByUserId(user.getId()).getStudent_id(), page, pageSize);
         }
     }
 }
