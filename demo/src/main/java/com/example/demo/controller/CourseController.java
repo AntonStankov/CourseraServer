@@ -71,6 +71,16 @@ public class CourseController {
         public PaginationResponse findUncompleteCourses(Long userId, int page, int pageSize) {
             return CourseService.super.findUncompleteCourses(userId, page, pageSize);
         }
+
+        @Override
+        public PaginationResponse findCompleteCourses(Long userId, int page, int pageSize) {
+            return CourseService.super.findCompleteCourses(userId, page, pageSize);
+        }
+
+        @Override
+        public PaginationResponse findAll(Long userId, int page, int pageSize) {
+            return CourseService.super.findAll(userId, page, pageSize);
+        }
     };
 
     private TeacherService teacherService = new TeacherService() {
@@ -127,12 +137,22 @@ public class CourseController {
     }
 
     @GetMapping("/completed")
-    public List<Course> completed(@RequestParam int page, @RequestParam int pageSize,  HttpServletRequest httpServletRequest){
+    public PaginationResponse completed(@RequestParam int page, @RequestParam int pageSize,  HttpServletRequest httpServletRequest){
         if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "JWT Token has expired!");
         User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
         if (!user.getRole().toString().equals("STUDENT")) throw new RuntimeException("You are not a student!");
         else {
             return courseService.findCompleteCourses(studentService.findStudentByUserId(user.getId()).getStudent_id(), page, pageSize);
+        }
+    }
+
+    @GetMapping("/findAll")
+    public PaginationResponse findAll(@RequestParam int page, @RequestParam int pageSize, HttpServletRequest httpServletRequest){
+        if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "JWT Token has expired!");
+        User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
+        if (!user.getRole().toString().equals("STUDENT")) throw new RuntimeException("You are not a student!");
+        else {
+            return courseService.findAll(studentService.findStudentByUserId(user.getId()).getStudent_id(), page, pageSize);
         }
     }
 }

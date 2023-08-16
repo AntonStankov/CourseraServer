@@ -8,6 +8,7 @@ import com.example.demo.entity.Teacher;
 import com.example.demo.entity.User;
 import com.example.demo.service.teacher.TeacherService;
 import com.example.demo.service.user.UserService;
+import org.aspectj.weaver.ast.Literal;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
@@ -200,9 +201,29 @@ public class CoursesTableManager {
     }
 
 
-    public List<Course> findCompletedCourses(Long userId, int page, int pageSize) {
+    public PaginationResponse findCompletedCourses(Long userId, int page, int pageSize) {
+
+        Long totalSavings = 0L;
         List<Course> courses = new ArrayList<>();
+
+
+
         try (Connection connection = datasource.createConnection()) {
+
+            String countSql = "SELECT COUNT(*) AS savings_count FROM courses c " +
+                    "JOIN teachers t ON t.teacher_id = c.teacher_id " +
+                    "WHERE EXISTS " +
+                    "(SELECT * FROM enrollment e " +
+                    "WHERE e.student_id = ? AND e.course_id = c.courseId)";
+
+            try (PreparedStatement countStatement = connection.prepareStatement(countSql)) {
+                countStatement.setLong(1, userId);
+                try (ResultSet countResultSet = countStatement.executeQuery()) {
+                    if (countResultSet.next()) {
+                        totalSavings = countResultSet.getLong("savings_count");
+                    }
+                }
+            }
             String sql = "SELECT * FROM courses c " +
                     "JOIN teachers t ON t.teacher_id = c.teacher_id " +
                     "WHERE EXISTS " +
@@ -230,7 +251,53 @@ public class CoursesTableManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return courses;
+        return new PaginationResponse(totalSavings, courses);
+    }
+
+    public PaginationResponse findAllCourses(Long userId, int page, int pageSize) {
+        Long totalSavings = 0L;
+        List<Course> courses = new ArrayList<>();
+        try (Connection connection = datasource.createConnection()) {
+
+            String countSql = "SELECT COUNT(*) AS savings_count FROM courses c " +
+                    "JOIN teachers t ON t.teacher_id = c.teacher_id " +
+                    "WHERE NOT EXISTS " +
+                    "(SELECT * FROM enrollment e " +
+                    "WHERE e.student_id = ? AND e.course_id = c.courseId)";
+
+            try (PreparedStatement countStatement = connection.prepareStatement(countSql)) {
+                countStatement.setLong(1, userId);
+                try (ResultSet countResultSet = countStatement.executeQuery()) {
+                    if (countResultSet.next()) {
+                        totalSavings = countResultSet.getLong("savings_count");
+                    }
+                }
+            }
+            String sql = "SELECT * FROM courses c " +
+                    "JOIN teachers t ON t.teacher_id = c.teacher_id " +
+                    "LIMIT ? OFFSET ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setLong(1, userId);
+                preparedStatement.setInt(2, pageSize);
+                preparedStatement.setInt(3, (page - 1) * pageSize);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    while (resultSet.next()) {
+                        Course course = new Course();
+                        course.setCourseId(resultSet.getLong("courseId"));
+                        course.setCourseName(resultSet.getString("courseName"));
+                        course.setCredit(resultSet.getInt("credit"));
+                        course.setDescription(resultSet.getString("description"));
+                        course.setDuration(resultSet.getLong("duration"));
+                        course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
+                        courses.add(course);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return new PaginationResponse(totalSavings, courses);
     }
 
 }
