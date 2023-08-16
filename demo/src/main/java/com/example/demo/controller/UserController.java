@@ -11,6 +11,8 @@ import com.example.demo.service.secrets.SecretsService;
 import com.example.demo.service.student.StudentService;
 import com.example.demo.service.teacher.TeacherService;
 import com.example.demo.service.user.UserService;
+import io.github.cdimascio.dotenv.Dotenv;
+import io.github.cdimascio.dotenv.DotenvBuilder;
 import jakarta.servlet.http.HttpServletRequest;
 import org.eclipse.jetty.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +20,14 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 
 @CrossOrigin(origins = "http://localhost:5173")
@@ -49,11 +57,6 @@ public class UserController {
             return UserService.super.findByEmail(email);
         }
 
-//        @Override
-//        public User updateUser(User user, Long id) {
-//            return UserService.super.updateUser(user, id);
-//        }
-
         @Override
         public User findUserById(Long id) {
             return UserService.super.findUserById(id);
@@ -67,6 +70,11 @@ public class UserController {
         @Override
         public User changeEmil(Long id, String email) {
             return UserService.super.changeEmil(id, email);
+        }
+
+        @Override
+        public void setProfilePic(String path, Long userId) {
+            UserService.super.setProfilePic(path, userId);
         }
     };
 
@@ -117,6 +125,10 @@ public class UserController {
     @Autowired
     private BlackListService blackListService;
 
+    Dotenv dotenv = new DotenvBuilder().load();
+
+    String filePath1 = dotenv.get("app_users.pictures.path");
+
 
 
 
@@ -129,7 +141,7 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public Object register(@RequestBody AuthRequest authRequest){
+    public Object register(@RequestBody AuthRequest authRequest) throws IOException {
         if (userService.findByEmail(authRequest.getEmail()) != null) return ResponseEntity.status(HttpStatus.BAD_REQUEST_400)
                 .body("Email already exists!");
         if (authRequest.getRole().toString().equals("STUDENT")){
@@ -137,6 +149,7 @@ public class UserController {
             user.setEmail(authRequest.getEmail());
             user.setRole(UserRoleEnum.STUDENT);
             user.setTimeCreated(LocalDateTime.now());
+
             userService.save(user, authRequest.getPassword());
 
             Student student = new Student();
@@ -160,6 +173,16 @@ public class UserController {
             teacherService.save(teacher, userService.findByEmail(user.getEmail()));
             return teacherService.findById(teacher.getTeacher_id());
         }
+    }
+
+    @PostMapping("/setProfilePic")
+    public String setProfilePicture(@RequestParam MultipartFile file, HttpServletRequest httpServletRequest) throws IOException {
+        Path filePath = Paths.get("files/", file.getOriginalFilename());
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+        User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
+        userService.setProfilePic("files/" + file.getOriginalFilename(), user.getId());
+        return file.toString();
     }
 
 

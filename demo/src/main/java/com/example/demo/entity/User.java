@@ -29,6 +29,7 @@ public class User {
     @Column
     private LocalDateTime timeCreated;
 
-
+    @Column
+    private String picturePath;
 
 }
