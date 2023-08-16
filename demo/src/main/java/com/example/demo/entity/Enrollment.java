@@ -29,5 +29,8 @@ public class Enrollment {
     private Course course;
 
     @Column
+    private Boolean completed;
+
+    @Column
     private LocalDateTime completion_date;
 }
