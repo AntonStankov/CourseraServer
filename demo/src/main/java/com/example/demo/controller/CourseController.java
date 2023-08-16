@@ -73,8 +73,8 @@ public class CourseController {
         }
 
         @Override
-        public PaginationResponse findCompleteCourses(Long userId, int page, int pageSize) {
-            return CourseService.super.findCompleteCourses(userId, page, pageSize);
+        public PaginationResponse findCompleteCourses(Long userId, int page, int pageSize, Boolean completed) {
+            return CourseService.super.findCompleteCourses(userId, page, pageSize, completed);
         }
 
         @Override
@@ -157,12 +157,12 @@ public class CourseController {
     }
 
     @GetMapping("/completed")
-    public PaginationResponse completed(@RequestParam int page, @RequestParam int pageSize,  HttpServletRequest httpServletRequest){
+    public PaginationResponse completed(@RequestParam int page, @RequestParam int pageSize, @RequestParam Boolean completed,  HttpServletRequest httpServletRequest){
         if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "JWT Token has expired!");
         User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
         if (!user.getRole().toString().equals("STUDENT")) throw new RuntimeException("You are not a student!");
         else {
-            return courseService.findCompleteCourses(studentService.findStudentByUserId(user.getId()).getStudent_id(), page, pageSize);
+            return courseService.findCompleteCourses(studentService.findStudentByUserId(user.getId()).getStudent_id(), page, pageSize, completed);
         }
     }
 

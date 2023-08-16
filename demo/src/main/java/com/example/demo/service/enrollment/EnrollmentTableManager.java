@@ -44,6 +44,7 @@ public class EnrollmentTableManager {
 
 
     public Enrollment insertEnrollment(Long studentId, Long courseId) {
+        if (findEnrollmentByStudentAndCourseIds(courseId, studentId) != null) throw new RuntimeException("Already signed for this course!");
         Long generatedEnrollmentId = null;
         try (Connection connection = datasource.createConnection()) {
             String sql = "INSERT INTO enrollment (student_id, course_id, completed) VALUES (?, ?, ?)";
@@ -154,7 +155,7 @@ public class EnrollmentTableManager {
     }
 
     private Long findEnrollmentByStudentAndCourseIds(Long courseId, Long studentId){
-        Enrollment enrollment = null;
+        Enrollment enrollment = new Enrollment(null, null, null, null, null);
         try (Connection connection = datasource.createConnection()) {
             String sql = "SELECT * FROM enrollment e " +
                     "JOIN students s ON e.student_id = s.student_id " +
