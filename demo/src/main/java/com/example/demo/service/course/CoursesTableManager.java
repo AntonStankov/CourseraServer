@@ -201,7 +201,7 @@ public class CoursesTableManager {
     }
 
 
-    public PaginationResponse findCompletedCourses(Long userId, int page, int pageSize) {
+    public PaginationResponse findCompletedCourses(Long userId, int page, int pageSize, Boolean completed) {
 
         Long totalSavings = 0L;
         List<Course> courses = new ArrayList<>();
@@ -214,10 +214,11 @@ public class CoursesTableManager {
                     "JOIN teachers t ON t.teacher_id = c.teacher_id " +
                     "WHERE EXISTS " +
                     "(SELECT * FROM enrollment e " +
-                    "WHERE e.student_id = ? AND e.course_id = c.courseId)";
+                    "WHERE e.student_id = ? AND e.course_id = c.courseId AND e.completed = ?)";
 
             try (PreparedStatement countStatement = connection.prepareStatement(countSql)) {
                 countStatement.setLong(1, userId);
+                countStatement.setBoolean(2, completed);
                 try (ResultSet countResultSet = countStatement.executeQuery()) {
                     if (countResultSet.next()) {
                         totalSavings = countResultSet.getLong("savings_count");
@@ -228,12 +229,13 @@ public class CoursesTableManager {
                     "JOIN teachers t ON t.teacher_id = c.teacher_id " +
                     "WHERE EXISTS " +
                     "(SELECT * FROM enrollment e " +
-                    "WHERE e.student_id = ? AND e.course_id = c.courseId) " +
+                    "WHERE e.student_id = ? AND e.course_id = c.courseId AND e.completed = ?) " +
                     "LIMIT ? OFFSET ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setLong(1, userId);
-                preparedStatement.setInt(2, pageSize);
-                preparedStatement.setInt(3, (page - 1) * pageSize);
+                preparedStatement.setBoolean(2, completed);
+                preparedStatement.setInt(3, pageSize);
+                preparedStatement.setInt(4, (page - 1) * pageSize);
 
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     while (resultSet.next()) {
