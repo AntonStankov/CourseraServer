@@ -213,6 +213,7 @@ public class UserController {
 
     }
 
+    //fix string serialization
     @PostMapping("/changeEmail")
     public User changeEmail(@RequestBody AuthRequest authRequest, HttpServletRequest httpServletRequest){
         User myuser = userService.findByEmail(jwtTokenService.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
