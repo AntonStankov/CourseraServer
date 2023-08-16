@@ -34,4 +34,8 @@ public interface UserService {
         return tableManager.changeEmail(id, email);
     }
 
+    public default void setProfilePic(String path, Long userId){
+        tableManager.updateUser(path, userId);
+    }
+
 }
