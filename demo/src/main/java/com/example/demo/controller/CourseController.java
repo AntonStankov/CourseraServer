@@ -93,11 +93,16 @@ public class CourseController {
 
     private EnrollmentService enrollmentService = new EnrollmentService() {
         @Override
-        public Enrollment save(Long studentId,
-                               Long courseId) {
+        public Enrollment save(Long studentId, Long courseId) {
             return EnrollmentService.super.save(studentId, courseId);
         }
+
+        @Override
+        public Enrollment updateEnrollment(Long courseId, Long studentId) {
+           return EnrollmentService.super.updateEnrollment(courseId, studentId);
+        }
     };
+
     @PostMapping("/create")
     public Course create(@RequestBody Course course, HttpServletRequest httpServletRequest){
 //        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -112,8 +117,8 @@ public class CourseController {
         }
     }
 
-    @PostMapping("/complete/{courseId}")
-    public Enrollment completeCourse(@PathVariable Long courseId, HttpServletRequest httpServletRequest){
+    @PostMapping("/sign/{courseId}")
+    public Enrollment signCourse(@PathVariable Long courseId, HttpServletRequest httpServletRequest) throws ResponseStatusException{
         if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatusCode.valueOf(403), "JWT has expired!");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetails principal = (UserDetails) authentication.getPrincipal();
@@ -122,6 +127,21 @@ public class CourseController {
         if (!user.getRole().toString().equals("STUDENT")) throw new RuntimeException("You are not a student!");
         else {
             return enrollmentService.save(studentService.findStudentByUserId(user.getId()).getStudent_id(), courseId);
+        }
+    }
+
+    
+
+    @PostMapping("/complete/{courseId}")
+    public Enrollment completeCourse(@PathVariable Long courseId, HttpServletRequest httpServletRequest) throws ResponseStatusException{
+        if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatusCode.valueOf(403), "JWT has expired!");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetails principal = (UserDetails) authentication.getPrincipal();
+        User user = userService.findByEmail(principal.getUsername());
+
+        if (!user.getRole().toString().equals("STUDENT")) throw new RuntimeException("You are not a student!");
+        else {
+            return enrollmentService.updateEnrollment(courseId, studentService.findStudentByUserId(user.getId()).getStudent_id());
         }
     }
 
