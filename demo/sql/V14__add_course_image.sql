@@ -1,0 +1,2 @@
+ALTER TABLE courses
+ADD COLUMN picture_path VARCHAR(255);

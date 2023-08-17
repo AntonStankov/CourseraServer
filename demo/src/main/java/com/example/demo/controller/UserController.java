@@ -177,11 +177,11 @@ public class UserController {
 
     @PostMapping("/setProfilePic")
     public String setProfilePicture(@RequestParam MultipartFile file, HttpServletRequest httpServletRequest) throws IOException {
-        Path filePath = Paths.get("files/", file.getOriginalFilename());
+        Path filePath = Paths.get("userFiles/", file.getOriginalFilename());
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
         User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
-        userService.setProfilePic("files/" + file.getOriginalFilename(), user.getId());
+        userService.setProfilePic("userFiles/" + file.getOriginalFilename(), user.getId());
         return file.toString();
     }
 

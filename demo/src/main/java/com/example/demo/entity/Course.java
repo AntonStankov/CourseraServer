@@ -34,4 +34,10 @@ public class Course {
 
     @Column
     private int credit;
+
+    @Column
+    private String picturePath;
+
+    @Column
+    private Long studentsCount;
 }

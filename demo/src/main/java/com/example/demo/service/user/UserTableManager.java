@@ -31,7 +31,7 @@ public class UserTableManager {
     public User insertUser(User user, String password) {
         Long generatedUserId = null;
         try (Connection connection = datasource.createConnection()) {
-            String sql = "INSERT INTO app_users (email, role, timeCreated, picture_path) VALUES (?, ?, ?, ?)";
+            String sql = "INSERT INTO app_users (email, role, timeCreated) VALUES (?, ?, ?)";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 //                preparedStatement.setString(1, user.getPassword());
                 preparedStatement.setString(1, user.getEmail());

@@ -1,0 +1,2 @@
+ALTER TABLE courses
+ADD COLUMN students_count BIGINT DEFAULT 0;
