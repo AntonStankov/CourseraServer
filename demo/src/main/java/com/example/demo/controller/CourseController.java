@@ -23,7 +23,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.List;
 import java.util.Objects;
 
 @CrossOrigin(origins = "http://localhost:5173")
@@ -75,8 +74,8 @@ public class CourseController {
         }
 
         @Override
-        public PaginationResponse findUncompleteCourses(Long userId, int page, int pageSize) {
-            return CourseService.super.findUncompleteCourses(userId, page, pageSize);
+        public PaginationResponse findUncompletedCourses(Long userId, int page, int pageSize) {
+            return CourseService.super.findUncompletedCourses(userId, page, pageSize);
         }
 
         @Override
@@ -102,6 +101,11 @@ public class CourseController {
         @Override
         public void editCourse(Course course) {
             CourseService.super.editCourse(course);
+        }
+
+        @Override
+        public PaginationResponse findTeachersCourses(Long teacherId, int page, int pageSize) {
+            return CourseService.super.findTeachersCourses(teacherId, page, pageSize);
         }
     };
 
@@ -190,7 +194,7 @@ public class CourseController {
         System.out.println(user.getId());
         if (!user.getRole().toString().equals("STUDENT")) throw new RuntimeException("You are not a student!");
         else {
-            return courseService.findUncompleteCourses(studentService.findStudentByUserId(user.getId()).getStudent_id(), page, pageSize);
+            return courseService.findUncompletedCourses(studentService.findStudentByUserId(user.getId()).getStudent_id(), page, pageSize);
         }
     }
 
@@ -222,5 +226,12 @@ public class CourseController {
         if (!Objects.equals(entity.getTeacher().getTeacher_id(), teacher.getTeacher_id())) throw new RuntimeException("You are not the course teacher!");
         courseService.editCourse(course);
         return courseService.findById(course.getCourseId());
+    }
+
+    @GetMapping("/findMyCourses") // get courses created by the teacher
+    public PaginationResponse findMyCourses(@RequestParam int page, @RequestParam int pageSize, HttpServletRequest httpServletRequest){
+        User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
+        Teacher teacher = teacherService.findByUserId(user.getId());
+        return courseService.findTeachersCourses(teacher.getTeacher_id(), page, pageSize);
     }
 }

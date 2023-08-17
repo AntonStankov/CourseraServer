@@ -210,8 +210,6 @@ public class CoursesTableManager {
         Long totalSavings = 0L;
         List<Course> courses = new ArrayList<>();
 
-
-
         try (Connection connection = datasource.createConnection()) {
 
             String countSql = "SELECT COUNT(*) AS savings_count FROM courses c " +
@@ -334,5 +332,55 @@ public class CoursesTableManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+
+    public PaginationResponse findTeachersCourses(Long teacherId, int page, int pageSize) {
+        Long totalSavings = 0L;
+        List<Course> courses = new ArrayList<>();
+        try (Connection connection = datasource.createConnection()) {
+
+            String countSql = "SELECT COUNT(*) AS savings_count FROM courses c " +
+                    "JOIN teachers t ON t.teacher_id = c.teacher_id " +
+                    "WHERE c.teacher_id = ?";
+
+            try (PreparedStatement countStatement = connection.prepareStatement(countSql)) {
+                countStatement.setLong(1, teacherId);
+                try (ResultSet countResultSet = countStatement.executeQuery()) {
+                    if (countResultSet.next()) {
+                        totalSavings = countResultSet.getLong("savings_count");
+                    }
+                }
+            }
+            String sql = "SELECT * FROM courses c " +
+                    "JOIN teachers t ON t.teacher_id = c.teacher_id " +
+                    "WHERE c.teacher_id = ? " +
+                    "ORDER BY students_count DESC " +
+                    "LIMIT ? OFFSET ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setLong(1, teacherId);
+                preparedStatement.setInt(2, pageSize);
+                preparedStatement.setInt(3, (page - 1) * pageSize);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    while (resultSet.next()) {
+                        Course course = new Course();
+                        course.setCourseId(resultSet.getLong("courseId"));
+                        course.setCourseName(resultSet.getString("courseName"));
+                        course.setCredit(resultSet.getInt("credit"));
+                        course.setDescription(resultSet.getString("description"));
+                        course.setDuration(resultSet.getLong("duration"));
+                        course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
+                        course.setPicturePath(resultSet.getString("picture_path"));
+                        course.setStudentsCount(resultSet.getLong("students_count"));
+
+                        courses.add(course);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return new PaginationResponse(totalSavings, courses);
     }
 }

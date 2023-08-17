@@ -2,7 +2,6 @@ package com.example.demo.service.enrollment;
 
 
 import com.example.demo.controller.PaginationResponse;
-import com.example.demo.enums.UserRoleEnum;
 import com.example.demo.config.DataSource;
 import com.example.demo.entity.*;
 import com.example.demo.service.course.CourseService;
@@ -36,8 +35,8 @@ public class EnrollmentTableManager {
         }
 
         @Override
-        public PaginationResponse findUncompleteCourses(Long userId, int page, int pageSize) {
-            return CourseService.super.findUncompleteCourses(userId, page, pageSize);
+        public PaginationResponse findUncompletedCourses(Long userId, int page, int pageSize) {
+            return CourseService.super.findUncompletedCourses(userId, page, pageSize);
         }
 
         @Override
