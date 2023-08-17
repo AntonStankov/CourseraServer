@@ -6,8 +6,6 @@ import com.example.demo.entity.Course;
 import com.example.demo.entity.Teacher;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 public interface CourseService {
     CoursesTableManager coursesTableManager = new CoursesTableManager();
@@ -20,7 +18,7 @@ public interface CourseService {
         return coursesTableManager.getCourseById(courseId);
     }
 
-    public default PaginationResponse findUncompleteCourses(Long userId, int page, int pageSize){
+    public default PaginationResponse findUncompletedCourses(Long userId, int page, int pageSize){
         return coursesTableManager.findUncompletedCourses(userId, page, pageSize);
     }
 
@@ -42,5 +40,9 @@ public interface CourseService {
 
     public default void editCourse(Course course){
         coursesTableManager.updateCourse(course);
+    }
+
+    public default PaginationResponse findTeachersCourses(Long teacherId, int page, int pageSize){
+        return coursesTableManager.findTeachersCourses(teacherId, page, pageSize);
     }
 }
