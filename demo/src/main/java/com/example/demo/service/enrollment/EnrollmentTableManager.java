@@ -1,6 +1,7 @@
 package com.example.demo.service.enrollment;
 
 
+import com.example.demo.controller.PaginationResponse;
 import com.example.demo.enums.UserRoleEnum;
 import com.example.demo.config.DataSource;
 import com.example.demo.entity.*;
@@ -25,8 +26,38 @@ public class EnrollmentTableManager {
 
     private CourseService courseService = new CourseService() {
         @Override
+        public Course create(Course course, Teacher teacher) {
+            return CourseService.super.create(course, teacher);
+        }
+
+        @Override
         public Course findById(Long courseId) {
             return CourseService.super.findById(courseId);
+        }
+
+        @Override
+        public PaginationResponse findUncompleteCourses(Long userId, int page, int pageSize) {
+            return CourseService.super.findUncompleteCourses(userId, page, pageSize);
+        }
+
+        @Override
+        public PaginationResponse findCompleteCourses(Long userId, int page, int pageSize, Boolean completed) {
+            return CourseService.super.findCompleteCourses(userId, page, pageSize, completed);
+        }
+
+        @Override
+        public PaginationResponse findAll(Long userId, int page, int pageSize) {
+            return CourseService.super.findAll(userId, page, pageSize);
+        }
+
+        @Override
+        public void setPicturePath(Long courseId, String path) {
+            CourseService.super.setPicturePath(courseId, path);
+        }
+
+        @Override
+        public void addStudentsCount(Long courseId) {
+            CourseService.super.addStudentsCount(courseId);
         }
     };
 
@@ -57,6 +88,7 @@ public class EnrollmentTableManager {
 
                 int credit = courseService.findById(courseId).getCredit();
                 studentService.addCredit(studentId, credit);
+                courseService.addStudentsCount(courseId);
                 if (affectedRows > 0) {
                     ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
                     if (generatedKeys.next()) {
@@ -111,12 +143,17 @@ public class EnrollmentTableManager {
                         enrollment.setEnrollment_id(resultSet.getLong("enrollment_id"));
                         enrollment.setCompleted(resultSet.getBoolean("completed"));
 //                        enrollment.setCompletion_date(resultSet.getTimestamp("completion_date").toLocalDateTime());
+
                         Student student = new Student();
                         student.setStudent_id(resultSet.getLong("student_id"));
                         student.setName(resultSet.getString("name"));
                         student.setCredit(resultSet.getLong("credit"));
                         enrollment.setStudent(student);
                         Course course = new Course();
+                        course.setStudentsCount(resultSet.getLong("students_count"));
+                        course.setDuration(resultSet.getLong("duration"));
+                        course.setPicturePath(resultSet.getString("picture_path"));
+                        course.setDescription(resultSet.getString("description"));
                         course.setCourseId(resultSet.getLong("courseId"));
                         course.setCourseName(resultSet.getString("courseName"));
                         Teacher teacher = new Teacher();
@@ -151,7 +188,9 @@ public class EnrollmentTableManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return getEnrollmentById(enrollmentId);
+        Enrollment enrollment1 = getEnrollmentById(enrollmentId);
+        enrollment1.setCompletion_date(LocalDateTime.now());
+        return enrollment1;
     }
 
     private Long findEnrollmentByStudentAndCourseIds(Long courseId, Long studentId){

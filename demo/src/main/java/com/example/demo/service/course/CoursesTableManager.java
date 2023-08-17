@@ -103,6 +103,8 @@ public class CoursesTableManager {
                         course.setCredit(resultSet.getInt("credit"));
                         course.setDescription(resultSet.getString("description"));
                         course.setDuration(resultSet.getLong("duration"));
+                        course.setPicturePath(resultSet.getString("picture_path"));
+                        course.setStudentsCount(resultSet.getLong("students_count"));
 
                         // Create a Teacher object and set its attributes
                         Teacher teacher = new Teacher();
@@ -189,6 +191,8 @@ public class CoursesTableManager {
                         course.setDuration(resultSet.getLong("duration"));
                         course.setCredit(resultSet.getInt("credit"));
                         course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
+                        course.setPicturePath(resultSet.getString("picture_path"));
+                        course.setStudentsCount(resultSet.getLong("students_count"));
                         courses.add(course);
                     }
                 }
@@ -246,6 +250,9 @@ public class CoursesTableManager {
                         course.setDescription(resultSet.getString("description"));
                         course.setDuration(resultSet.getLong("duration"));
                         course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
+                        course.setPicturePath(resultSet.getString("picture_path"));
+                        course.setStudentsCount(resultSet.getLong("students_count"));
+
                         courses.add(course);
                     }
                 }
@@ -292,6 +299,9 @@ public class CoursesTableManager {
                         course.setDescription(resultSet.getString("description"));
                         course.setDuration(resultSet.getLong("duration"));
                         course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
+                        course.setPicturePath(resultSet.getString("picture_path"));
+                        course.setStudentsCount(resultSet.getLong("students_count"));
+
                         courses.add(course);
                     }
                 }
@@ -302,4 +312,30 @@ public class CoursesTableManager {
         return new PaginationResponse(totalSavings, courses);
     }
 
+    public void setImagePath(Long courseId, String path) {
+        try (Connection connection = datasource.createConnection()) {
+            String sql = "UPDATE courses SET picture_path = ? WHERE courseId = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, path);
+                preparedStatement.setLong(2, courseId);
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void addStudentsCount(Long courseId) {
+        Long count = getCourseById(courseId).getStudentsCount();
+        try (Connection connection = datasource.createConnection()) {
+            String sql = "UPDATE courses SET students_count = ? WHERE courseId = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setLong(1, count + 1);
+                preparedStatement.setLong(2, courseId);
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }

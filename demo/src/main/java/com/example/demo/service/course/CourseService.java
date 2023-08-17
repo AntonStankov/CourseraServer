@@ -31,4 +31,12 @@ public interface CourseService {
     public default PaginationResponse findAll(Long userId, int page, int pageSize){
         return coursesTableManager.findAllCourses(userId, page, pageSize);
     }
+
+    public default void setPicturePath(Long courseId, String path){
+        coursesTableManager.setImagePath(courseId, path);
+    }
+
+    public default void addStudentsCount(Long courseId){
+        coursesTableManager.addStudentsCount(courseId);
+    }
 }

@@ -15,9 +15,16 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Objects;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
@@ -58,11 +65,6 @@ public class CourseController {
 
     private CourseService courseService = new CourseService() {
         @Override
-        public Course create(Course course, Teacher teacher) {
-            return CourseService.super.create(course, teacher);
-        }
-
-        @Override
         public Course findById(Long courseId) {
             return CourseService.super.findById(courseId);
         }
@@ -80,6 +82,11 @@ public class CourseController {
         @Override
         public PaginationResponse findAll(Long userId, int page, int pageSize) {
             return CourseService.super.findAll(userId, page, pageSize);
+        }
+
+        @Override
+        public void setPicturePath(Long courseId, String path) {
+            CourseService.super.setPicturePath(courseId, path);
         }
     };
 
@@ -103,6 +110,8 @@ public class CourseController {
         }
     };
 
+    private String coursesImages = "coursesFiles/";
+
     @PostMapping("/create")
     public Course create(@RequestBody Course course, HttpServletRequest httpServletRequest){
 //        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -116,6 +125,20 @@ public class CourseController {
             return courseService.create(course, teacherService.findByUserId(user.getId()));
         }
     }
+
+    @PostMapping("/setPicture/{courseId}")
+    public Course setPicture(@RequestParam MultipartFile file, @PathVariable Long courseId, HttpServletRequest httpServletRequest) throws IOException {
+        User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
+        Teacher teacher = teacherService.findByUserId(user.getId());
+        Course course = courseService.findById(courseId);
+        if (!Objects.equals(course.getTeacher().getTeacher_id(), teacher.getTeacher_id())) throw new RuntimeException("You are not the course teacher!");
+
+        Path filePath = Paths.get(coursesImages, file.getOriginalFilename());
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+        courseService.setPicturePath(courseId, coursesImages + file.getOriginalFilename());
+        return courseService.findById(courseId);
+    }
+
 
     @PostMapping("/sign/{courseId}")
     public Enrollment signCourse(@PathVariable Long courseId, HttpServletRequest httpServletRequest) throws ResponseStatusException{
