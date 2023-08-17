@@ -65,6 +65,11 @@ public class CourseController {
 
     private CourseService courseService = new CourseService() {
         @Override
+        public Course create(Course course, Teacher teacher) {
+            return CourseService.super.create(course, teacher);
+        }
+
+        @Override
         public Course findById(Long courseId) {
             return CourseService.super.findById(courseId);
         }
@@ -87,6 +92,16 @@ public class CourseController {
         @Override
         public void setPicturePath(Long courseId, String path) {
             CourseService.super.setPicturePath(courseId, path);
+        }
+
+        @Override
+        public void addStudentsCount(Long courseId) {
+            CourseService.super.addStudentsCount(courseId);
+        }
+
+        @Override
+        public void editCourse(Course course) {
+            CourseService.super.editCourse(course);
         }
     };
 
@@ -197,5 +212,15 @@ public class CourseController {
         else {
             return courseService.findAll(studentService.findStudentByUserId(user.getId()).getStudent_id(), page, pageSize);
         }
+    }
+
+    @PostMapping("/edit")
+    public Course editCourse(@RequestBody Course course, HttpServletRequest httpServletRequest){
+        User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
+        Teacher teacher = teacherService.findByUserId(user.getId());
+        Course entity = courseService.findById(course.getCourseId());
+        if (!Objects.equals(entity.getTeacher().getTeacher_id(), teacher.getTeacher_id())) throw new RuntimeException("You are not the course teacher!");
+        courseService.editCourse(course);
+        return courseService.findById(course.getCourseId());
     }
 }

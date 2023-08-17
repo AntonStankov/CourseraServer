@@ -125,12 +125,11 @@ public class CoursesTableManager {
 
     public void updateCourse(Course course) {
         try (Connection connection = datasource.createConnection()) {
-            String sql = "UPDATE courses SET courseName = ? description = ? credit = ? WHERE courseId = ?";
+            String sql = "UPDATE courses SET courseName = ?, description = ? WHERE courseId = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, course.getCourseName());
                 preparedStatement.setString(2, course.getDescription());
-                preparedStatement.setInt(3, course.getCredit());
-                preparedStatement.setLong(4, course.getCourseId());
+                preparedStatement.setLong(3, course.getCourseId());
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException e) {

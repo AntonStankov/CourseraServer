@@ -39,4 +39,8 @@ public interface CourseService {
     public default void addStudentsCount(Long courseId){
         coursesTableManager.addStudentsCount(courseId);
     }
+
+    public default void editCourse(Course course){
+        coursesTableManager.updateCourse(course);
+    }
 }
