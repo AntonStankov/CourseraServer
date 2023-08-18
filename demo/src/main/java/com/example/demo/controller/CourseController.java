@@ -18,7 +18,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.http.HttpClient;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -129,7 +134,11 @@ public class CourseController {
         }
     };
 
-    private String coursesImages = "coursesFiles/";
+    private String coursesImages = "src/main/resources/static/";
+
+    String url = "https://localhost:8080/actuator/refresh";
+
+
 
     @PostMapping("/create")
     public Course create(@RequestBody Course course, HttpServletRequest httpServletRequest){
@@ -152,9 +161,10 @@ public class CourseController {
         Course course = courseService.findById(courseId);
         if (!Objects.equals(course.getTeacher().getTeacher_id(), teacher.getTeacher_id())) throw new RuntimeException("You are not the course teacher!");
 
-        Path filePath = Paths.get(coursesImages, file.getOriginalFilename());
+        Path filePath = Paths.get(coursesImages, "course_" + course.getCourseId().toString() + "_" + file.getOriginalFilename());
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-        courseService.setPicturePath(courseId, "content/" + file.getOriginalFilename());
+        courseService.setPicturePath(courseId, "course_" + course.getCourseId().toString() + "_" + file.getOriginalFilename());
+
         return courseService.findById(courseId);
     }
 

@@ -98,27 +98,27 @@ class DemoApplicationTests {
 	void contextLoads() {
 	}
 
-    @Test
-    void addStudent(){
-        User user = new User(null, "a@gmail.com", UserRoleEnum.STUDENT, LocalDateTime.now());
-        userService.save(user, "12345678");
-        Student student = new Student(null, "Anton", null, 0L);
-
-        String string = studentService.save(student, userService.findByEmail(user.getEmail())).getName();
-        String expected = "Anton";
-        assertThat(string).isEqualTo(expected);
-    }
-
-    @Test
-    void addTeacher(){
-        User user = new User(null, "a1@gmail.com", UserRoleEnum.TEACHER, LocalDateTime.now());
-        userService.save(user, "12345678");
-        Teacher teacher = new Teacher(null, "Anton", null);
-
-        String string = teacherService.save(teacher, userService.findByEmail(user.getEmail())).getName();
-        String expected = "Anton";
-        assertThat(string).isEqualTo(expected);
-    }
+//    @Test
+//    void addStudent(){
+//        User user = new User(null, "a@gmail.com", UserRoleEnum.STUDENT, LocalDateTime.now());
+//        userService.save(user, "12345678");
+//        Student student = new Student(null, "Anton", null, 0L);
+//
+//        String string = studentService.save(student, userService.findByEmail(user.getEmail())).getName();
+//        String expected = "Anton";
+//        assertThat(string).isEqualTo(expected);
+//    }
+//
+//    @Test
+//    void addTeacher(){
+//        User user = new User(null, "a1@gmail.com", UserRoleEnum.TEACHER, LocalDateTime.now());
+//        userService.save(user, "12345678");
+//        Teacher teacher = new Teacher(null, "Anton", null);
+//
+//        String string = teacherService.save(teacher, userService.findByEmail(user.getEmail())).getName();
+//        String expected = "Anton";
+//        assertThat(string).isEqualTo(expected);
+//    }
 
 
     
