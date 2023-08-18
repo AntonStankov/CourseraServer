@@ -70,6 +70,7 @@ public class UserTableManager {
                     user.setEmail(resultSet.getString("email"));
                     user.setRole(UserRoleEnum.valueOf(resultSet.getString("role")));
                     user.setTimeCreated(resultSet.getTimestamp("timeCreated").toLocalDateTime());
+                    user.setPicturePath(resultSet.getString("picture_path"));
                     users.add(user);
                 }
             }
@@ -79,20 +80,20 @@ public class UserTableManager {
         return users;
     }
 
-//    public User updateUser(User user, Long id) {
-//        try (Connection connection = datasource.createConnection()) {
-//            String sql = "UPDATE app_users SET password = ? WHERE id = ?";
-//            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-//                preparedStatement.setString(1, passwordEncoder.encode(user.getPassword()));
-//                preparedStatement.setLong(2, id);
-//                preparedStatement.executeUpdate();
-//            }
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//
-//        return getUserById(id);
-//    }
+    public User updateUser(String path, Long id) {
+        try (Connection connection = datasource.createConnection()) {
+            String sql = "UPDATE app_users SET picture_path = ? WHERE id = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, path);
+                preparedStatement.setLong(2, id);
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return getUserById(id);
+    }
 
     public void deleteUser(Long userId) {
         try (Connection connection = datasource.createConnection()) {
@@ -120,6 +121,7 @@ public class UserTableManager {
                         user.setEmail(resultSet.getString("email"));
                         user.setRole(UserRoleEnum.valueOf(resultSet.getString("role")));
                         user.setTimeCreated(resultSet.getTimestamp("timeCreated").toLocalDateTime());
+                        user.setPicturePath(resultSet.getString("picture_path"));
                     }
                 }
             }
@@ -143,6 +145,8 @@ public class UserTableManager {
                         user.setEmail(resultSet.getString("email"));
                         user.setRole(UserRoleEnum.valueOf(resultSet.getString("role")));
                         user.setTimeCreated(resultSet.getTimestamp("timeCreated").toLocalDateTime());
+                        user.setPicturePath(resultSet.getString("picture_path"));
+
                     }
                 }
             }

@@ -11,6 +11,8 @@ import com.example.demo.service.secrets.SecretsService;
 import com.example.demo.service.student.StudentService;
 import com.example.demo.service.teacher.TeacherService;
 import com.example.demo.service.user.UserService;
+import io.github.cdimascio.dotenv.Dotenv;
+import io.github.cdimascio.dotenv.DotenvBuilder;
 import jakarta.servlet.http.HttpServletRequest;
 import org.eclipse.jetty.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +20,14 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 
 @CrossOrigin(origins = "http://localhost:5173")
@@ -49,11 +57,6 @@ public class UserController {
             return UserService.super.findByEmail(email);
         }
 
-//        @Override
-//        public User updateUser(User user, Long id) {
-//            return UserService.super.updateUser(user, id);
-//        }
-
         @Override
         public User findUserById(Long id) {
             return UserService.super.findUserById(id);
@@ -67,6 +70,11 @@ public class UserController {
         @Override
         public User changeEmil(Long id, String email) {
             return UserService.super.changeEmil(id, email);
+        }
+
+        @Override
+        public void setProfilePic(String path, Long userId) {
+            UserService.super.setProfilePic(path, userId);
         }
     };
 
@@ -117,6 +125,10 @@ public class UserController {
     @Autowired
     private BlackListService blackListService;
 
+    Dotenv dotenv = new DotenvBuilder().load();
+
+    String filePath1 = dotenv.get("app_users.pictures.path");
+
 
 
 
@@ -129,7 +141,7 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public Object register(@RequestBody AuthRequest authRequest){
+    public Object register(@RequestBody AuthRequest authRequest) throws IOException {
         if (userService.findByEmail(authRequest.getEmail()) != null) return ResponseEntity.status(HttpStatus.BAD_REQUEST_400)
                 .body("Email already exists!");
         if (authRequest.getRole().toString().equals("STUDENT")){
@@ -137,6 +149,7 @@ public class UserController {
             user.setEmail(authRequest.getEmail());
             user.setRole(UserRoleEnum.STUDENT);
             user.setTimeCreated(LocalDateTime.now());
+
             userService.save(user, authRequest.getPassword());
 
             Student student = new Student();
@@ -160,6 +173,16 @@ public class UserController {
             teacherService.save(teacher, userService.findByEmail(user.getEmail()));
             return teacherService.findById(teacher.getTeacher_id());
         }
+    }
+
+    @PostMapping("/setProfilePic")
+    public String setProfilePicture(@RequestParam MultipartFile file, HttpServletRequest httpServletRequest) throws IOException {
+        Path filePath = Paths.get("userFiles/", file.getOriginalFilename());
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+        User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
+        userService.setProfilePic("userFiles/" + file.getOriginalFilename(), user.getId());
+        return file.toString();
     }
 
 
@@ -199,25 +222,26 @@ public class UserController {
     }
 
     @PostMapping("/updateName")
-    public Object updateNames(@RequestBody String name, HttpServletRequest httpServletRequest){
+    public Object updateNames(@RequestBody AuthRequest authRequest, HttpServletRequest httpServletRequest){
         User user = userService.findByEmail(jwtTokenService.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
         if (user.getRole().toString().equals("TEACHER")){
             Teacher teacher = teacherService.findByUserId(user.getId());
-            return teacherService.updateTeacher(name, teacher.getTeacher_id());
+            return teacherService.updateTeacher(authRequest.getName(), teacher.getTeacher_id());
         }
         else if(user.getRole().toString().equals("STUDENT")){
             Student student = studentService.findStudentByUserId(user.getId());
-            return studentService.changeName(name, student.getStudent_id());
+            return studentService.changeName(authRequest.getName(), student.getStudent_id());
         }
         return null;
 
     }
 
+    //fix string serialization
     @PostMapping("/changeEmail")
-    public User changeEmail(@RequestBody String email, HttpServletRequest httpServletRequest){
+    public User changeEmail(@RequestBody AuthRequest authRequest, HttpServletRequest httpServletRequest){
         User myuser = userService.findByEmail(jwtTokenService.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
         if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatusCode.valueOf(403), "JWT has expired!");
-        return userService.changeEmil(myuser.getId(), email);
+        return userService.changeEmil(myuser.getId(), authRequest.getEmail());
     }
 
     @PostMapping("/changePassword")
@@ -228,6 +252,20 @@ public class UserController {
             secretsService.changePassword(request.getPassword(), userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest))).getId());
         }
         else throw new RuntimeException("Wrong password!");
+    }
+
+    @GetMapping("/getProfile")
+    public Object getProfile(HttpServletRequest httpServletRequest){
+        User user = userService.findByEmail(jwtTokenService.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
+        if (user.getRole().toString().equals("STUDENT")){
+            Student student = studentService.findStudentByUserId(user.getId());
+            return new ProfileResponse(student.getName(), user.getEmail(), user.getRole(), user.getTimeCreated(), student.getCredit());
+        }
+        else if (user.getRole().toString().equals("TEACHER")){
+            Teacher teacher = teacherService.findByUserId(user.getId());
+            return new ProfileResponse(teacher.getName(), user.getEmail(), user.getRole(), user.getTimeCreated());
+        }
+        else throw new RuntimeException("No user with this ID!");
     }
 
 }

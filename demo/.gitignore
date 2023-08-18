@@ -36,3 +36,6 @@ build/
 
 src/main/resources/application.properties
 .env
+src/main/resources/userImages/**
+userFiles/**
+coursesFiles/**
