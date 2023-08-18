@@ -181,7 +181,7 @@ public class UserController {
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
         User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
-        userService.setProfilePic("userFiles/" + file.getOriginalFilename(), user.getId());
+        userService.setProfilePic("content/" + file.getOriginalFilename(), user.getId());
         return file.toString();
     }
 

@@ -154,7 +154,7 @@ public class CourseController {
 
         Path filePath = Paths.get(coursesImages, file.getOriginalFilename());
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-        courseService.setPicturePath(courseId, coursesImages + file.getOriginalFilename());
+        courseService.setPicturePath(courseId, "content/" + file.getOriginalFilename());
         return courseService.findById(courseId);
     }
 
