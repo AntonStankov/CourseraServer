@@ -116,7 +116,7 @@ public class CourseController {
     }
 
     @GetMapping("/uncompleted")
-    public PaginationResponse findUncompletedCourses(@RequestBody PaginationRequest paginationRequest, HttpServletRequest httpServletRequest){
+    public PaginationResponse findUncompletedCourses(@PathVariable PaginationRequest paginationRequest, HttpServletRequest httpServletRequest){
         if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "JWT Token has expired!");
         User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
         System.out.println(user.getId());

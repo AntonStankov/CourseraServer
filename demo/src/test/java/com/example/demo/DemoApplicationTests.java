@@ -1,12 +1,17 @@
 package com.example.demo;
 
+import com.example.demo.entity.Course;
 import com.example.demo.entity.Student;
 import com.example.demo.entity.Teacher;
 import com.example.demo.entity.User;
+import com.example.demo.entity.Course;
 import com.example.demo.enums.UserRoleEnum;
 import com.example.demo.service.student.StudentService;
 import com.example.demo.service.teacher.TeacherService;
+import com.example.demo.service.course.CoursesTableManager;
 import com.example.demo.service.user.UserService;
+import jakarta.persistence.EnumType;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -98,6 +103,7 @@ class DemoApplicationTests {
 	void contextLoads() {
 	}
 
+    @DisplayName("Should be able to add student")
     @Test
     void addStudent(){
         User user = new User(null, "a@gmail.com", UserRoleEnum.STUDENT, LocalDateTime.now());
@@ -109,6 +115,7 @@ class DemoApplicationTests {
         assertThat(string).isEqualTo(expected);
     }
 
+    @DisplayName("Should be able to add teacher")
     @Test
     void addTeacher(){
         User user = new User(null, "a1@gmail.com", UserRoleEnum.TEACHER, LocalDateTime.now());
@@ -120,7 +127,98 @@ class DemoApplicationTests {
         assertThat(string).isEqualTo(expected);
     }
 
+    @DisplayName("Should be able to create course")
+    @Test
+    void createCourse()
+    {
+        CoursesTableManager coursesTableManager = new CoursesTableManager();
+        User newUser = new User(Long.valueOf(12),
+                "a@gmail.com", UserRoleEnum.TEACHER, LocalDateTime.now());
+        Teacher newTeacher = new Teacher(Long.valueOf(10), "TeacherName", newUser);
+        teacherService.save(newTeacher, userService.findByEmail(newUser.getEmail()));
+        Course newCourse = new Course(Long.valueOf(10), newTeacher, "Dropwizard Course", 20);
 
-    
+        String courseName = coursesTableManager.insertCourse(newCourse, newTeacher).getCourseName();
+        String expected_courseName = "Dropwizard Course";
+        assertThat(expected_courseName).isEqualTo(courseName);
+
+        String courseTeachName = coursesTableManager.insertCourse(newCourse, newTeacher).getTeacher().getName();
+        String expected_courseTeachName = "TeacherName";
+        assertThat(expected_courseTeachName).isEqualTo(courseTeachName);
+    }
+
+    @DisplayName("Should not be able to create course without name")
+    @Test
+    void cannotCreateCourseWithNullName()
+    {
+        CoursesTableManager coursesTableManager = new CoursesTableManager();
+        User newUser = new User(Long.valueOf(12),
+                "a@gmail.com", UserRoleEnum.TEACHER, LocalDateTime.now());
+        Teacher newTeacher = new Teacher(Long.valueOf(10), "TeacherName", newUser);
+        teacherService.save(newTeacher, userService.findByEmail(newUser.getEmail()));
+        Course newCourse = new Course(Long.valueOf(10), newTeacher, null, 20);
+
+        coursesTableManager.insertCourse(newCourse, newTeacher);
+        assertThat(newCourse.equals(null));
+    }
+
+    @DisplayName("Should be able to get a course by ID")
+    @Test
+    void courseByID()
+    {
+        CoursesTableManager coursesTableManager = new CoursesTableManager();
+        User newUser = new User(Long.valueOf(12),
+                "a@gmail.com", UserRoleEnum.TEACHER, LocalDateTime.now());
+        Teacher newTeacher = new Teacher(Long.valueOf(10), "TeacherName", newUser);
+        teacherService.save(newTeacher, userService.findByEmail(newUser.getEmail()));
+        Course newCourse = new Course(Long.valueOf(10), newTeacher, "Dropwizard Course", 20);
+
+        coursesTableManager.insertCourse(newCourse, newTeacher);
+
+        String courseName = coursesTableManager.getCourseById(Long.valueOf(10)).getCourseName();
+
+        String expected_courseName = "Dropwizard Course";
+        assertThat(expected_courseName).isEqualTo(courseName);
+    }
+
+    @DisplayName("Should not be able to get course with ID that doesn't exist")
+    @Test
+    void cannotGetCourseByIDIfItDoesntExist()
+    {
+        CoursesTableManager coursesTableManager = new CoursesTableManager();
+        User newUser = new User(Long.valueOf(12),
+                "a@gmail.com", UserRoleEnum.TEACHER, LocalDateTime.now());
+        Teacher newTeacher = new Teacher(Long.valueOf(10), "TeacherName", newUser);
+        teacherService.save(newTeacher, userService.findByEmail(newUser.getEmail()));
+        Course newCourse = new Course(Long.valueOf(10), newTeacher, "Dropwizard Course", 20);
+
+        coursesTableManager.insertCourse(newCourse, newTeacher);
+
+        Course gotCourse = coursesTableManager.getCourseById(Long.valueOf(1000));
+
+        assertThat(gotCourse).isEqualTo(null);
+    }
+
+    @DisplayName("Should not be able to get course with ID == null")
+    @Test
+    void cannotGetCourseByIDIfIDIsNull()
+    {
+        CoursesTableManager coursesTableManager = new CoursesTableManager();
+        User newUser = new User(Long.valueOf(12),
+                "a@gmail.com", UserRoleEnum.TEACHER, LocalDateTime.now());
+        Teacher newTeacher = new Teacher(Long.valueOf(10), "TeacherName", newUser);
+        teacherService.save(newTeacher, userService.findByEmail(newUser.getEmail()));
+        Course newCourse = new Course(Long.valueOf(10), newTeacher, "Dropwizard Course", 20);
+
+        coursesTableManager.insertCourse(newCourse, newTeacher);
+
+        Course gotCourse = coursesTableManager.getCourseById(null);
+
+        assertThat(gotCourse).isEqualTo(null);
+    }
+
+
 
 }
+
+

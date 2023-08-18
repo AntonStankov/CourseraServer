@@ -18,7 +18,6 @@ import java.util.List;
 @Repository
 public class EnrollmentTableManager {
 
-
     private DataSource datasource = new DataSource();
 
     private CourseService courseService = new CourseService() {
