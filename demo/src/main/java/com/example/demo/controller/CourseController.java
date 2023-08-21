@@ -114,6 +114,11 @@ public class CourseController {
         public PaginationResponse findTeachersCourses(Long teacherId, int page, int pageSize) {
             return CourseService.super.findTeachersCourses(teacherId, page, pageSize);
         }
+
+        @Override
+        public PaginationResponse searchAllCoursesByName(int page, int pageSize, String name) {
+            return CourseService.super.searchAllCoursesByName(page, pageSize, name);
+        }
     };
 
     private TeacherService teacherService = new TeacherService() {
@@ -265,5 +270,12 @@ public class CourseController {
         Course course = courseService.findById(courseId);
         if (course != null) return course;
         else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is no course with id: " + courseId.toString());
+    }
+
+    @GetMapping("/findAllByName")
+    public PaginationResponse findAllByName(@RequestParam int page, @RequestParam int pageSize, @RequestParam String name, HttpServletRequest httpServletRequest){
+        if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatusCode.valueOf(403), "JWT has expired!");
+
+        return courseService.searchAllCoursesByName(page, pageSize, name);
     }
 }
