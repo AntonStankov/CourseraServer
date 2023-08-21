@@ -258,4 +258,10 @@ public class CourseController {
         Teacher teacher = teacherService.findByUserId(user.getId());
         return courseService.findTeachersCourses(teacher.getTeacher_id(), page, pageSize);
     }
+
+    @GetMapping("/findCourseById/{courseId}")
+    public Course findCourseById(@PathVariable Long courseId, HttpServletRequest httpServletRequest){
+        if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatusCode.valueOf(403), "JWT has expired!");
+        return courseService.findById(courseId);
+    }
 }
