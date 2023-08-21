@@ -19,11 +19,13 @@ public class ProfileResponse {
     private UserRoleEnum role;
     private LocalDateTime timeCreated;
     private Long credit;
+    private String picturePath;
 
-    public ProfileResponse(String name, String email, UserRoleEnum role, LocalDateTime timeCreated){
+    public ProfileResponse(String name, String email, UserRoleEnum role, LocalDateTime timeCreated, String picturePath){
         this.name = name;
         this.email = email;
         this.role = role;
         this.timeCreated = timeCreated;
+        this.picturePath = picturePath;
     }
 }

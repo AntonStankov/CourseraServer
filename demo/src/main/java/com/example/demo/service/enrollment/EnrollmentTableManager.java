@@ -74,7 +74,6 @@ public class EnrollmentTableManager {
 
 
     public Enrollment insertEnrollment(Long studentId, Long courseId) {
-        if (findEnrollmentByStudentAndCourseIds(courseId, studentId) != null) throw new RuntimeException("Already signed for this course!");
         Long generatedEnrollmentId = null;
         try (Connection connection = datasource.createConnection()) {
             String sql = "INSERT INTO enrollment (student_id, course_id, completed) VALUES (?, ?, ?)";
@@ -175,7 +174,7 @@ public class EnrollmentTableManager {
     public Enrollment updateEnrollment(Long courseId, Long studentId) throws ResponseStatusException {
         Long enrollmentId = findEnrollmentByStudentAndCourseIds(courseId, studentId);
         Enrollment enrollment = getEnrollmentById(enrollmentId);
-        if (enrollment.getCompleted().equals(true)) throw new ResponseStatusException(HttpStatusCode.valueOf(500), "Already completed this course!");
+        if (enrollment.getCompleted().equals(true)) return null;
         try (Connection connection = datasource.createConnection()) {
             String sql = "UPDATE enrollment SET completed = ?, completion_date = ? WHERE enrollment_id = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -192,7 +191,7 @@ public class EnrollmentTableManager {
         return enrollment1;
     }
 
-    private Long findEnrollmentByStudentAndCourseIds(Long courseId, Long studentId){
+    public Long findEnrollmentByStudentAndCourseIds(Long courseId, Long studentId){
         Enrollment enrollment = new Enrollment(null, null, null, null, null);
         try (Connection connection = datasource.createConnection()) {
             String sql = "SELECT * FROM enrollment e " +
