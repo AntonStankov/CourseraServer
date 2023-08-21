@@ -9,6 +9,7 @@ import com.example.demo.service.student.StudentService;
 import com.example.demo.service.teacher.TeacherService;
 import com.example.demo.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jdk.jfr.ContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -167,7 +168,10 @@ public class CourseController {
         Teacher teacher = teacherService.findByUserId(user.getId());
         Course course = courseService.findById(courseId);
         if (!Objects.equals(course.getTeacher().getTeacher_id(), teacher.getTeacher_id())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You are not the course teacher!");
-        System.out.println(file.getContentType());
+
+        if (!Objects.requireNonNull(file.getContentType()).startsWith("image/")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Uploaded file is not an image.");
+        }
 
         Path filePath = Paths.get(coursesImages, "course_" + course.getCourseId().toString() + "_" + file.getOriginalFilename());
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
