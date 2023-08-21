@@ -49,4 +49,8 @@ public interface CourseService {
     public default PaginationResponse searchAllCoursesByName(int page, int pageSize, String name){
         return coursesTableManager.searchAllCoursesByName(page, pageSize, name);
     }
+
+    public default UserState checkEnrollment(Long courseId, Long studentId){
+        return coursesTableManager.checkEnrollment(courseId, studentId);
+    }
 }

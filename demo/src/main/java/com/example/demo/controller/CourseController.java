@@ -1,8 +1,11 @@
 package com.example.demo.controller;
 
 import com.example.demo.entity.*;
+import com.example.demo.enums.StateEnums;
+import com.example.demo.enums.UserRoleEnum;
 import com.example.demo.jwt.JwtTokenService;
 import com.example.demo.service.course.CourseService;
+import com.example.demo.service.course.UserState;
 import com.example.demo.service.enrollment.EnrollmentService;
 import com.example.demo.service.secrets.SecretsService;
 import com.example.demo.service.student.StudentService;
@@ -118,6 +121,11 @@ public class CourseController {
         @Override
         public PaginationResponse searchAllCoursesByName(int page, int pageSize, String name) {
             return CourseService.super.searchAllCoursesByName(page, pageSize, name);
+        }
+
+        @Override
+        public UserState checkEnrollment(Long courseId, Long studentId) {
+            return CourseService.super.checkEnrollment(courseId, studentId);
         }
     };
 
@@ -265,10 +273,19 @@ public class CourseController {
     }
 
     @GetMapping("/findCourseById/{courseId}")
-    public Course findCourseById(@PathVariable Long courseId, HttpServletRequest httpServletRequest){
+    public Object findCourseById(@PathVariable Long courseId, HttpServletRequest httpServletRequest){
         if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatusCode.valueOf(403), "JWT has expired!");
         Course course = courseService.findById(courseId);
-        if (course != null) return course;
+        User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
+        if (user.getRole() == UserRoleEnum.TEACHER && course != null) return course;
+        else if (user.getRole() == UserRoleEnum.STUDENT) {
+            StateEnums stateEnum = null;
+            UserState userState = courseService.checkEnrollment(courseId, studentService.findStudentByUserId(user.getId()).getStudent_id());
+            if (userState.isEnrolled() && userState.isCompleted()) stateEnum = StateEnums.COMPLETED;
+            else if (userState.isEnrolled() && !userState.isCompleted()) stateEnum = StateEnums.CAN_COMPLETE;
+            else if (!userState.isEnrolled()) stateEnum = StateEnums.CAN_ENROLL;
+            return new CourseState(course, stateEnum);
+        }
         else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is no course with id: " + courseId.toString());
     }
 
