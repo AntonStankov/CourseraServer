@@ -14,11 +14,13 @@ import com.example.demo.service.user.UserService;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.github.cdimascio.dotenv.DotenvBuilder;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.eclipse.jetty.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -29,6 +31,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
@@ -141,7 +145,14 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public Object register(@RequestBody AuthRequest authRequest) throws IOException {
+    public Object register(@Valid @RequestBody AuthRequest authRequest, BindingResult bindingResult) throws IOException {
+        if (bindingResult.hasErrors()) {
+            List<String> errors = bindingResult.getFieldErrors().stream()
+                    .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.badRequest().body(errors);
+        }
         if (userService.findByEmail(authRequest.getEmail()) != null) return ResponseEntity.status(HttpStatus.BAD_REQUEST_400)
                 .body("Email already exists!");
         if (authRequest.getRole().toString().equals("STUDENT")){
@@ -176,18 +187,28 @@ public class UserController {
     }
 
     @PostMapping("/setProfilePic")
-    public String setProfilePicture(@RequestParam MultipartFile file, HttpServletRequest httpServletRequest) throws IOException {
+    public Object setProfilePicture(@RequestParam MultipartFile file, HttpServletRequest httpServletRequest) throws IOException {
         User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
         Path filePath = Paths.get("src/main/resources/static/", "user_" + user.getId().toString() + "_" + file.getOriginalFilename());
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
         userService.setProfilePic("user_" + user.getId().toString() + "_" + file.getOriginalFilename(), user.getId());
-        return file.toString();
+        if (user.getRole().toString().equals("TEACHER")){
+            return teacherService.findByUserId(user.getId());
+        }
+        else return studentService.findStudentByUserId(user.getId());
     }
 
 
     @PostMapping("/login")
-    public Object login(@RequestBody AuthRequest authRequest) {
+    public Object login(@Valid @RequestBody AuthRequest authRequest, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            List<String> errors = bindingResult.getFieldErrors().stream()
+                    .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.badRequest().body(errors);
+        }
 
         User user = userService.findByEmail(authRequest.getEmail());
         UserSecrets userSecrets = secretsService.findById(user.getId());
@@ -214,11 +235,6 @@ public class UserController {
         String token = jwtTokenService.getTokenFromRequest(httpServletRequest);
         blackListService.addTokenToBlacklist(token);
         return "Logged out!";
-    }
-
-    @GetMapping("/test/hello")
-    public String hello(){
-        return "hello user";
     }
 
     @PostMapping("/updateName")
@@ -259,13 +275,13 @@ public class UserController {
         User user = userService.findByEmail(jwtTokenService.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
         if (user.getRole().toString().equals("STUDENT")){
             Student student = studentService.findStudentByUserId(user.getId());
-            return new ProfileResponse(student.getName(), user.getEmail(), user.getRole(), user.getTimeCreated(), student.getCredit());
+            return new ProfileResponse(student.getName(), user.getEmail(), user.getRole(), user.getTimeCreated(), student.getCredit(), user.getPicturePath());
         }
         else if (user.getRole().toString().equals("TEACHER")){
             Teacher teacher = teacherService.findByUserId(user.getId());
-            return new ProfileResponse(teacher.getName(), user.getEmail(), user.getRole(), user.getTimeCreated());
+            return new ProfileResponse(teacher.getName(), user.getEmail(), user.getRole(), user.getTimeCreated(), user.getPicturePath());
         }
-        else throw new RuntimeException("No user with this ID!");
+        else throw new ResponseStatusException(HttpStatusCode.valueOf(400), "No user with this ID!");
     }
 
 }
