@@ -90,8 +90,9 @@ public class CoursesTableManager {
     public Course getCourseById(Long courseId) {
         Course course = null;
         try (Connection connection = datasource.createConnection()) {
-            String sql = "SELECT c.*, t.* FROM courses c " +
+            String sql = "SELECT c.*, t.*, u.* FROM courses c " +
                     "JOIN teachers t ON c.teacher_id = t.teacher_id " +
+                    "JOIN app_users u ON t.user_id = u.id " +
                     "WHERE c.courseId = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setLong(1, courseId);
@@ -110,6 +111,7 @@ public class CoursesTableManager {
                         Teacher teacher = new Teacher();
                         teacher.setTeacher_id(resultSet.getLong("teacher_id"));
                         teacher.setName(resultSet.getString("name"));
+                        teacher.setUser(userService.findByEmail(resultSet.getString("email")));
                         // Set other teacher attributes
 
                         // Set the Teacher object for the Course
@@ -121,6 +123,45 @@ public class CoursesTableManager {
             // Handle the exception
         }
         return course;
+    }
+
+    public UserState checkEnrollment(Long courseId, Long studentId) {
+        boolean enrolled = false;
+        boolean completed = false;
+        try (Connection connection = datasource.createConnection()) {
+            String sql = "SELECT CASE " +
+                    "    WHEN EXISTS (SELECT * FROM enrollment e WHERE e.course_id = ? AND e.student_id = ?) " +
+                    "    THEN TRUE " +
+                    "    ELSE FALSE " +
+                    "END AS enrolled;";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+                preparedStatement.setLong(1, courseId);
+                preparedStatement.setLong(2, studentId);
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                       enrolled = resultSet.getBoolean("enrolled");
+                    }
+                }
+            }
+            if (enrolled){
+                String query = "SELECT * FROM enrollment e WHERE e.course_id = ? AND e.student_id = ?";
+
+                try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+                    preparedStatement.setLong(1, courseId);
+                    preparedStatement.setLong(2, studentId);
+                    try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                        if (resultSet.next()) {
+                            completed = resultSet.getBoolean("completed");
+                        }
+                    }
+                }
+            }
+
+        } catch (SQLException e) {
+            // Handle the exception
+        }
+        return new UserState(enrolled, completed);
     }
 
     public void updateCourse(Course course) {
