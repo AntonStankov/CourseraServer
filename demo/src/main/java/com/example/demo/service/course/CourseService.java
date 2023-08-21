@@ -45,4 +45,8 @@ public interface CourseService {
     public default PaginationResponse findTeachersCourses(Long teacherId, int page, int pageSize){
         return coursesTableManager.findTeachersCourses(teacherId, page, pageSize);
     }
+
+    public default PaginationResponse searchAllCoursesByName(int page, int pageSize, String name){
+        return coursesTableManager.searchAllCoursesByName(page, pageSize, name);
+    }
 }
