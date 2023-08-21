@@ -262,6 +262,8 @@ public class CourseController {
     @GetMapping("/findCourseById/{courseId}")
     public Course findCourseById(@PathVariable Long courseId, HttpServletRequest httpServletRequest){
         if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatusCode.valueOf(403), "JWT has expired!");
-        return courseService.findById(courseId);
+        Course course = courseService.findById(courseId);
+        if (course != null) return course;
+        else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is no course with id: " + courseId.toString());
     }
 }
