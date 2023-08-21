@@ -231,14 +231,31 @@ public class CoursesTableManager {
                     "JOIN teachers t ON t.teacher_id = c.teacher_id " +
                     "WHERE EXISTS " +
                     "(SELECT * FROM enrollment e " +
-                    "WHERE e.student_id = ? AND e.course_id = c.courseId AND e.completed = ?) " +
-                    "ORDER BY students_count DESC " +
-                    "LIMIT ? OFFSET ?";
+                    "WHERE e.student_id = ? AND e.course_id = c.courseId AND e.completed = ?) ";
+//                    "ORDER BY students_count DESC " +
+//                    "LIMIT ? OFFSET ?";
+            if (completed) {
+                sql += "ORDER BY (SELECT completion_date FROM enrollment e " +
+                        "WHERE e.student_id = ? AND e.course_id = c.courseId AND e.completed = ?) DESC, " +
+                        "students_count DESC ";
+            } else {
+                sql += "ORDER BY students_count DESC ";
+            }
+
+            sql += "LIMIT ? OFFSET ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setLong(1, userId);
                 preparedStatement.setBoolean(2, completed);
-                preparedStatement.setInt(3, pageSize);
-                preparedStatement.setInt(4, (page - 1) * pageSize);
+
+                if (completed) {
+                    preparedStatement.setLong(3, userId);
+                    preparedStatement.setBoolean(4, completed);
+                    preparedStatement.setInt(5, pageSize);
+                    preparedStatement.setInt(6, (page - 1) * pageSize);
+                } else {
+                    preparedStatement.setInt(3, pageSize);
+                    preparedStatement.setInt(4, (page - 1) * pageSize);
+                }
 
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     while (resultSet.next()) {
