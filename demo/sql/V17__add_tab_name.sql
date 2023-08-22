@@ -1,0 +1,2 @@
+ALTER TABLE tabs
+ADD COLUMN tabName VARCHAR(255);

@@ -14,6 +14,7 @@ import org.aspectj.weaver.ast.Literal;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,12 +66,13 @@ public class CoursesTableManager {
     public Course insertCourse(Course course, Teacher teacher) {
         Long generatedCourseId = null;
         try (Connection connection = datasource.createConnection()) {
-            String sql = "INSERT INTO courses (courseName, description, duration, credit) VALUES (?, ?, ?, ?)";
+            String sql = "INSERT INTO courses (courseName, description, duration, credit, time_created) VALUES (?, ?, ?, ?, ?)";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 preparedStatement.setString(1, course.getCourseName());
                 preparedStatement.setString(2, course.getDescription());
                 preparedStatement.setLong(3, course.getDuration());
                 preparedStatement.setInt(4, course.getCredit());
+                preparedStatement.setTimestamp(5, Timestamp.valueOf(LocalDateTime.now()));
                 int affectedRows = preparedStatement.executeUpdate();
 
                 if (affectedRows > 0) {
@@ -121,6 +123,7 @@ public class CoursesTableManager {
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
                         course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
+                        course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
 
 
                         // Create a Teacher object and set its attributes
@@ -251,6 +254,8 @@ public class CoursesTableManager {
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
                         course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
+                        course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
+
                         courses.add(course);
                     }
                 }
@@ -327,6 +332,8 @@ public class CoursesTableManager {
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
                         course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
+                        course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
+
 
                         courses.add(course);
                     }
@@ -373,6 +380,8 @@ public class CoursesTableManager {
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
                         course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
+                        course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
+
 
                         courses.add(course);
                     }
@@ -451,6 +460,8 @@ public class CoursesTableManager {
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
                         course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
+                        course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
+
 
 
                         courses.add(course);
@@ -503,6 +514,8 @@ public class CoursesTableManager {
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
                         course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
+                        course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
+
 
                         courses.add(course);
                     }
