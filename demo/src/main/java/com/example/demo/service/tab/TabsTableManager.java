@@ -3,10 +3,7 @@ package com.example.demo.service.tab;
 
 import com.example.demo.config.DataSource;
 import com.example.demo.controller.PaginationResponse;
-import com.example.demo.entity.Course;
-import com.example.demo.entity.Tab;
-import com.example.demo.entity.Teacher;
-import com.example.demo.entity.User;
+import com.example.demo.entity.*;
 import com.example.demo.enums.TabContentType;
 import com.example.demo.service.course.CourseService;
 import com.example.demo.service.course.UserState;
@@ -114,11 +111,12 @@ public class TabsTableManager {
     public Tab insertTab(Tab tab, Long courseId) {
         Long generatedTabId = null;
         try (Connection connection = datasource.createConnection()) {
-            String sql = "INSERT INTO tabs (contentType, content, course_id) VALUES (?, ?, ?)";
+            String sql = "INSERT INTO tabs (contentType, content, course_id, tabName) VALUES (?, ?, ?, ?)";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 preparedStatement.setString(1, tab.getContentType().toString());
                 preparedStatement.setString(2, tab.getContent());
                 preparedStatement.setLong(3, courseId);
+                preparedStatement.setString(4, tab.getTabName());
                 int affectedRows = preparedStatement.executeUpdate();
 
                 if (affectedRows > 0) {
@@ -149,6 +147,7 @@ public class TabsTableManager {
                         tab.setTab_id(resultSet.getLong("tab_id"));
                         tab.setContent(resultSet.getString("content"));
                         tab.setContentType(TabContentType.valueOf(resultSet.getString("contentType")));
+                        tab.setTabName(resultSet.getString("tabName"));
 //                        tab.setCourse(courseService.findById(resultSet.getLong("course_id")));
                     }
                 }
@@ -172,6 +171,7 @@ public class TabsTableManager {
                         tab.setTab_id(resultSet.getLong("tab_id"));
                         tab.setContent(resultSet.getString("content"));
                         tab.setContentType(TabContentType.valueOf(resultSet.getString("contentType")));
+                        tab.setTabName(resultSet.getString("tabName"));
 //                        tab.setCourse(courseService.findById(resultSet.getLong("course_id")));
                         tabs.add(tab);
                     }
@@ -181,5 +181,21 @@ public class TabsTableManager {
             //
         }
         return tabs;
+    }
+
+    public Tab updateTab(Tab tab, Long id) {
+        try (Connection connection = datasource.createConnection()) {
+            String sql = "UPDATE tabs SET tabName = ?, contentType = ?, content = ? WHERE tab_id = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, tab.getTabName());
+                preparedStatement.setString(2, TabContentType.valueOf(tab.getContentType().toString()).toString());
+                preparedStatement.setString(3, tab.getContent());
+                preparedStatement.setLong(4, id);
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return findTabById(id);
     }
 }

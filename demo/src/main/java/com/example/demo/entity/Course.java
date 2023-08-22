@@ -7,7 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 
 
 @AllArgsConstructor
@@ -45,4 +47,7 @@ public class Course {
 
     @OneToMany
     private List<Tab> tabs;
+
+    @Column
+    private LocalDateTime time_created;
 }

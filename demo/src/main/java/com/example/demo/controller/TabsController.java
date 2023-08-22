@@ -17,6 +17,8 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/tabs")
@@ -142,6 +144,21 @@ public class TabsController {
         public Tab insertTab(Tab tab, Long courseId) {
             return TabsService.super.insertTab(tab, courseId);
         }
+
+        @Override
+        public List<Tab> findTabsByCourseId(Long courseId) {
+            return TabsService.super.findTabsByCourseId(courseId);
+        }
+
+        @Override
+        public Tab editTab(Tab tab, Long id) {
+            return TabsService.super.editTab(tab, id);
+        }
+
+        @Override
+        public Tab findById(Long id) {
+            return TabsService.super.findById(id);
+        }
     };
 
     @PostMapping("/create")
@@ -152,5 +169,16 @@ public class TabsController {
         Course course = courseService.findById(tab.getCourse().getCourseId());
         if (course.getTeacher().getTeacher_id() != teacher.getTeacher_id()) throw new ResponseStatusException(HttpStatusCode.valueOf(400), "You are not the course teacher!");
         return tabsService.insertTab(tab, course.getCourseId());
+    }
+
+    @PostMapping("/edit/{tabId}")
+    public Tab editTab(@RequestBody Tab tab, @PathVariable Long tabId, HttpServletRequest httpServletRequest){
+        User user = userService.findByEmail(jwtTokenService.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
+        if (user.getRole().toString().equals("STUDENT")) throw new ResponseStatusException(HttpStatusCode.valueOf(400), "You are not a teacher!");
+        Teacher teacher = teacherService.findByUserId(user.getId());
+        Course course = courseService.findById(tab.getCourse().getCourseId());
+        if (course.getTeacher().getTeacher_id() != teacher.getTeacher_id()) throw new ResponseStatusException(HttpStatusCode.valueOf(400), "You are not the course teacher!");
+//        if (!course.getTabs().contains(tabsService.findById(tabId))) throw new ResponseStatusException(HttpStatusCode.valueOf(400), "This tab is not in this course!");
+        return tabsService.editTab(tab, tabId);
     }
 }

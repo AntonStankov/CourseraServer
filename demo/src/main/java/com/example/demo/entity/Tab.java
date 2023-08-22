@@ -20,6 +20,9 @@ public class Tab {
     private Long tab_id;
 
     @Column
+    private String tabName;
+
+    @Column
     private TabContentType contentType;
 
     @Column
