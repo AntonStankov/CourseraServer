@@ -6,6 +6,8 @@ import com.example.demo.config.DataSource;
 import com.example.demo.entity.*;
 import com.example.demo.service.course.CourseService;
 import com.example.demo.service.student.StudentService;
+import com.example.demo.service.tab.TabsService;
+import com.example.demo.service.user.UserService;
 import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Repository;
@@ -22,6 +24,61 @@ public class EnrollmentTableManager {
 
 
     private DataSource datasource = new DataSource();
+
+    private UserService userService = new UserService() {
+        @Override
+        public User save(User user, String password) {
+            return UserService.super.save(user, password);
+        }
+
+        @Override
+        public User findByEmail(String email) {
+            return UserService.super.findByEmail(email);
+        }
+
+        @Override
+        public User findUserById(Long id) {
+            return UserService.super.findUserById(id);
+        }
+
+        @Override
+        public void deleteUser(Long id) {
+            UserService.super.deleteUser(id);
+        }
+
+        @Override
+        public User changeEmil(Long id, String email) {
+            return UserService.super.changeEmil(id, email);
+        }
+
+        @Override
+        public void setProfilePic(String path, Long userId) {
+            UserService.super.setProfilePic(path, userId);
+        }
+
+        @Override
+        public User findUserByStudentId(Long studentId) {
+            return UserService.super.findUserByStudentId(studentId);
+        }
+
+        @Override
+        public User findUserByTeacherId(Long teacherId) {
+            return UserService.super.findUserByTeacherId(teacherId);
+        }
+    };
+
+
+    private TabsService tabsService = new TabsService() {
+        @Override
+        public Tab insertTab(Tab tab, Long courseId) {
+            return TabsService.super.insertTab(tab, courseId);
+        }
+
+        @Override
+        public List<Tab> findTabsByCourseId(Long courseId) {
+            return TabsService.super.findTabsByCourseId(courseId);
+        }
+    };
 
     private CourseService courseService = new CourseService() {
         @Override
@@ -146,6 +203,7 @@ public class EnrollmentTableManager {
                         student.setStudent_id(resultSet.getLong("student_id"));
                         student.setName(resultSet.getString("name"));
                         student.setCredit(resultSet.getLong("credit"));
+                        student.setUser(userService.findUserByStudentId(resultSet.getLong("student_id")));
                         enrollment.setStudent(student);
                         Course course = new Course();
                         course.setStudentsCount(resultSet.getLong("students_count"));
@@ -154,9 +212,11 @@ public class EnrollmentTableManager {
                         course.setDescription(resultSet.getString("description"));
                         course.setCourseId(resultSet.getLong("courseId"));
                         course.setCourseName(resultSet.getString("courseName"));
+                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
                         Teacher teacher = new Teacher();
                         teacher.setTeacher_id(resultSet.getLong("teacher_id"));
                         teacher.setName(resultSet.getString("name"));
+                        teacher.setUser(userService.findUserByTeacherId(resultSet.getLong("teacher_id")));
                         course.setTeacher(teacher);
                         enrollment.setCourse(course);
 
@@ -215,6 +275,8 @@ public class EnrollmentTableManager {
                         Course course = new Course();
                         course.setCourseId(resultSet.getLong("courseId"));
                         course.setCourseName(resultSet.getString("courseName"));
+                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
+
                         Teacher teacher = new Teacher();
                         teacher.setTeacher_id(resultSet.getLong("teacher_id"));
                         teacher.setName(resultSet.getString("name"));

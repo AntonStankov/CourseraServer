@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -40,4 +42,7 @@ public class Course {
 
     @Column
     private Long studentsCount;
+
+    @OneToMany
+    private List<Tab> tabs;
 }

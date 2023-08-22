@@ -4,8 +4,10 @@ package com.example.demo.service.course;
 import com.example.demo.config.DataSource;
 import com.example.demo.controller.PaginationResponse;
 import com.example.demo.entity.Course;
+import com.example.demo.entity.Tab;
 import com.example.demo.entity.Teacher;
 import com.example.demo.entity.User;
+import com.example.demo.service.tab.TabsService;
 import com.example.demo.service.teacher.TeacherService;
 import com.example.demo.service.user.UserService;
 import org.aspectj.weaver.ast.Literal;
@@ -17,6 +19,18 @@ import java.util.List;
 
 @Repository
 public class CoursesTableManager {
+
+    private TabsService tabsService = new TabsService() {
+        @Override
+        public Tab insertTab(Tab tab, Long courseId) {
+            return TabsService.super.insertTab(tab, courseId);
+        }
+
+        @Override
+        public List<Tab> findTabsByCourseId(Long courseId) {
+            return TabsService.super.findTabsByCourseId(courseId);
+        }
+    };
 
     private UserService userService = new UserService() {
         @Override
@@ -106,6 +120,8 @@ public class CoursesTableManager {
                         course.setDuration(resultSet.getLong("duration"));
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
+                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
+
 
                         // Create a Teacher object and set its attributes
                         Teacher teacher = new Teacher();
@@ -234,6 +250,7 @@ public class CoursesTableManager {
                         course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
+                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
                         courses.add(course);
                     }
                 }
@@ -309,6 +326,7 @@ public class CoursesTableManager {
                         course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
+                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
 
                         courses.add(course);
                     }
@@ -354,6 +372,7 @@ public class CoursesTableManager {
                         course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
+                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
 
                         courses.add(course);
                     }
@@ -431,6 +450,8 @@ public class CoursesTableManager {
                         course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
+                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
+
 
                         courses.add(course);
                     }
@@ -481,6 +502,7 @@ public class CoursesTableManager {
                         course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
+                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
 
                         courses.add(course);
                     }
