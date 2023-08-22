@@ -170,4 +170,52 @@ public class UserTableManager {
         }
         return getUserById(userId);
     }
+
+    public User findUserByStudentId(Long studentId){
+        User user = null;
+        try (Connection connection = datasource.createConnection()) {
+            String sql = "SELECT * FROM app_users WHERE EXISTS (SELECT * FROM students s WHERE s.student_id = ?)";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setLong(1, studentId);
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        user = new User();
+                        user.setId(resultSet.getLong("id"));
+                        user.setEmail(resultSet.getString("email"));
+                        user.setRole(UserRoleEnum.valueOf(resultSet.getString("role")));
+                        user.setTimeCreated(resultSet.getTimestamp("timeCreated").toLocalDateTime());
+                        user.setPicturePath(resultSet.getString("picture_path"));
+
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return user;
+    }
+
+    public User findUserByTeacherId(Long teacherId){
+        User user = null;
+        try (Connection connection = datasource.createConnection()) {
+            String sql = "SELECT * FROM app_users WHERE EXISTS (SELECT * FROM teachers t WHERE t.teacher_id = ?)";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setLong(1, teacherId);
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        user = new User();
+                        user.setId(resultSet.getLong("id"));
+                        user.setEmail(resultSet.getString("email"));
+                        user.setRole(UserRoleEnum.valueOf(resultSet.getString("role")));
+                        user.setTimeCreated(resultSet.getTimestamp("timeCreated").toLocalDateTime());
+                        user.setPicturePath(resultSet.getString("picture_path"));
+
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return user;
+    }
 }
