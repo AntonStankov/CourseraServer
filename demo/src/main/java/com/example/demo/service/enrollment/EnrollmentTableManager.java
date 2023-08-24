@@ -75,8 +75,8 @@ public class EnrollmentTableManager {
         }
 
         @Override
-        public List<Tab> findTabsByCourseId(Long courseId) {
-            return TabsService.super.findTabsByCourseId(courseId);
+        public List<Tab> findTabsByCourseId(Long courseId, Long studentId) {
+            return TabsService.super.findTabsByCourseId(courseId, studentId);
         }
     };
 
@@ -87,8 +87,8 @@ public class EnrollmentTableManager {
         }
 
         @Override
-        public Course findById(Long courseId) {
-            return CourseService.super.findById(courseId);
+        public Course findById(Long courseId, Long studentId) {
+            return CourseService.super.findById(courseId, studentId);
         }
 
         @Override
@@ -141,7 +141,7 @@ public class EnrollmentTableManager {
 //                preparedStatement.setTimestamp(4, Timestamp.valueOf(LocalDateTime.MAX));
                 int affectedRows = preparedStatement.executeUpdate();
 
-                int credit = courseService.findById(courseId).getCredit();
+                int credit = courseService.findById(courseId, studentId).getCredit();
                 studentService.addCredit(studentId, credit);
                 courseService.addStudentsCount(courseId);
                 if (affectedRows > 0) {
@@ -212,7 +212,7 @@ public class EnrollmentTableManager {
                         course.setDescription(resultSet.getString("description"));
                         course.setCourseId(resultSet.getLong("courseId"));
                         course.setCourseName(resultSet.getString("courseName"));
-                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
+                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId"), null));
                         Teacher teacher = new Teacher();
                         teacher.setTeacher_id(resultSet.getLong("teacher_id"));
                         teacher.setName(resultSet.getString("name"));
@@ -275,7 +275,7 @@ public class EnrollmentTableManager {
                         Course course = new Course();
                         course.setCourseId(resultSet.getLong("courseId"));
                         course.setCourseName(resultSet.getString("courseName"));
-                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
+                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId"), studentId));
 
                         Teacher teacher = new Teacher();
                         teacher.setTeacher_id(resultSet.getLong("teacher_id"));

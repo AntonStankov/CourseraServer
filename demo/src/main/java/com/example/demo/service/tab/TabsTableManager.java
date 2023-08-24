@@ -56,8 +56,8 @@ public class TabsTableManager {
         }
 
         @Override
-        public Course findById(Long courseId) {
-            return CourseService.super.findById(courseId);
+        public Course findById(Long courseId, Long studentId) {
+            return CourseService.super.findById(courseId, studentId);
         }
 
         @Override
@@ -132,15 +132,34 @@ public class TabsTableManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return findTabById(generatedTabId);
+        return findTabById(generatedTabId, null);
     }
 
-    public Tab findTabById(Long id) {
+    public Tab findTabById(Long tabId, Long studentId) {
+        if (studentId == null) studentId = 0L;
+        boolean completed = false;
         Tab tab = null;
         try (Connection connection = datasource.createConnection()) {
+            String checkQuery = "SELECT CASE " +
+                    "    WHEN EXISTS (SELECT * FROM tabCompletion t WHERE t.tab_id = ? AND t.student_id = ?) " +
+                    "    THEN TRUE " +
+                    "    ELSE FALSE " +
+                    "END AS completed;";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(checkQuery)) {
+                preparedStatement.setLong(1, tabId);
+                preparedStatement.setLong(2, studentId);
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        completed = resultSet.getBoolean("completed");
+                    }
+                }
+            }
+
+
             String sql = "SELECT a.*, c.* FROM tabs a JOIN courses c ON a.course_id = c.courseId WHERE a.tab_id = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setLong(1, id);
+                preparedStatement.setLong(1, tabId);
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     if (resultSet.next()) {
                         tab = new Tab();
@@ -148,7 +167,7 @@ public class TabsTableManager {
                         tab.setContent(resultSet.getString("content"));
                         tab.setContentType(TabContentType.valueOf(resultSet.getString("contentType")));
                         tab.setTabName(resultSet.getString("tabName"));
-//                        tab.setCourse(courseService.findById(resultSet.getLong("course_id")));
+                        tab.setCompleted(completed);
                     }
                 }
             }
@@ -158,7 +177,7 @@ public class TabsTableManager {
         return tab;
     }
 
-    public List<Tab> findTabsByCourseId(Long courseId) {
+    public List<Tab> findTabsByCourseId(Long courseId, Long studentId) {
         List<Tab> tabs = new ArrayList<>();
         Tab tab = null;
         try (Connection connection = datasource.createConnection()) {
@@ -167,12 +186,7 @@ public class TabsTableManager {
                 preparedStatement.setLong(1, courseId);
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     while (resultSet.next()) {
-                        tab = new Tab();
-                        tab.setTab_id(resultSet.getLong("tab_id"));
-                        tab.setContent(resultSet.getString("content"));
-                        tab.setContentType(TabContentType.valueOf(resultSet.getString("contentType")));
-                        tab.setTabName(resultSet.getString("tabName"));
-//                        tab.setCourse(courseService.findById(resultSet.getLong("course_id")));
+                        tab = findTabById(resultSet.getLong("tab_id"), studentId);
                         tabs.add(tab);
                     }
                 }
@@ -196,6 +210,30 @@ public class TabsTableManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return findTabById(id);
+        return findTabById(id, null);
+    }
+
+    public boolean checkTabInCourse(Long courseId, Long tabId){
+        boolean check = false;
+        try (Connection connection = datasource.createConnection()) {
+            String sql = "SELECT CASE " +
+                    "    WHEN EXISTS (SELECT * FROM tabs t WHERE t.course_id = ? AND t.tab_id = ?) " +
+                    "    THEN TRUE " +
+                    "    ELSE FALSE " +
+                    "END AS isInCourse;";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+                preparedStatement.setLong(1, courseId);
+                preparedStatement.setLong(2, tabId);
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        check = resultSet.getBoolean("isInCourse");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return check;
     }
 }

@@ -1,18 +1,20 @@
 package com.example.demo.controller;
 
-import com.example.demo.entity.Course;
-import com.example.demo.entity.Tab;
-import com.example.demo.entity.Teacher;
-import com.example.demo.entity.User;
+import com.example.demo.entity.*;
 import com.example.demo.jwt.JwtTokenService;
 import com.example.demo.service.course.CourseService;
 import com.example.demo.service.course.UserState;
+import com.example.demo.service.enrollment.EnrollmentService;
+import com.example.demo.service.student.StudentService;
 import com.example.demo.service.tab.TabsService;
+import com.example.demo.service.tabCompletion.TabCompletionService;
 import com.example.demo.service.teacher.TeacherService;
 import com.example.demo.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.Path;
 import org.checkerframework.checker.tainting.qual.PolyTainted;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -89,8 +91,8 @@ public class TabsController {
         }
 
         @Override
-        public Course findById(Long courseId) {
-            return CourseService.super.findById(courseId);
+        public Course findById(Long courseId, Long studentId) {
+            return CourseService.super.findById(courseId, studentId);
         }
 
         @Override
@@ -139,15 +141,15 @@ public class TabsController {
         }
     };
 
-    private TabsService tabsService = new TabsService() {
+    private TabsService tabsService =  new TabsService() {
         @Override
         public Tab insertTab(Tab tab, Long courseId) {
             return TabsService.super.insertTab(tab, courseId);
         }
 
         @Override
-        public List<Tab> findTabsByCourseId(Long courseId) {
-            return TabsService.super.findTabsByCourseId(courseId);
+        public List<Tab> findTabsByCourseId(Long courseId, Long studentId) {
+            return TabsService.super.findTabsByCourseId(courseId, studentId);
         }
 
         @Override
@@ -156,8 +158,65 @@ public class TabsController {
         }
 
         @Override
-        public Tab findById(Long id) {
-            return TabsService.super.findById(id);
+        public Tab findById(Long tabId, Long studentId) {
+            return TabsService.super.findById(tabId, studentId);
+        }
+
+        @Override
+        public boolean checkTabInCourse(Long courseId, Long tabId) {
+            return TabsService.super.checkTabInCourse(courseId, tabId);
+        }
+    };
+
+
+    private StudentService studentService = new StudentService() {
+        @Override
+        public Student save(Student student, User user) {
+            return StudentService.super.save(student, user);
+        }
+
+        @Override
+        public Student findById(Long id) {
+            return StudentService.super.findById(id);
+        }
+
+        @Override
+        public Student findStudentByUserId(Long userId) {
+            return StudentService.super.findStudentByUserId(userId);
+        }
+
+        @Override
+        public Student changeName(String name, Long id) {
+            return StudentService.super.changeName(name, id);
+        }
+
+        @Override
+        public void addCredit(Long studentId, int credit) {
+            StudentService.super.addCredit(studentId, credit);
+        }
+    };
+
+    private TabCompletionService tabCompletionService = new TabCompletionService() {
+        @Override
+        public TabCompletion insertTabCompletion(Long studentId, Long tabId) {
+            return TabCompletionService.super.insertTabCompletion(studentId, tabId);
+        }
+    };
+
+    private EnrollmentService enrollmentService = new EnrollmentService() {
+        @Override
+        public Enrollment save(Long studentId, Long courseId) {
+            return EnrollmentService.super.save(studentId, courseId);
+        }
+
+        @Override
+        public Enrollment updateEnrollment(Long courseId, Long studentId) {
+            return EnrollmentService.super.updateEnrollment(courseId, studentId);
+        }
+
+        @Override
+        public Long findEnrollmentByStudnentAndCourseIds(Long courseId, Long studentId) {
+            return EnrollmentService.super.findEnrollmentByStudnentAndCourseIds(courseId, studentId);
         }
     };
 
@@ -166,7 +225,7 @@ public class TabsController {
         User user = userService.findByEmail(jwtTokenService.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
         if (user.getRole().toString().equals("STUDENT")) throw new ResponseStatusException(HttpStatusCode.valueOf(400), "You are not a teacher!");
         Teacher teacher = teacherService.findByUserId(user.getId());
-        Course course = courseService.findById(tab.getCourse().getCourseId());
+        Course course = courseService.findById(tab.getCourse().getCourseId(), null);
         if (course.getTeacher().getTeacher_id() != teacher.getTeacher_id()) throw new ResponseStatusException(HttpStatusCode.valueOf(400), "You are not the course teacher!");
         return tabsService.insertTab(tab, course.getCourseId());
     }
@@ -176,9 +235,23 @@ public class TabsController {
         User user = userService.findByEmail(jwtTokenService.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
         if (user.getRole().toString().equals("STUDENT")) throw new ResponseStatusException(HttpStatusCode.valueOf(400), "You are not a teacher!");
         Teacher teacher = teacherService.findByUserId(user.getId());
-        Course course = courseService.findById(tab.getCourse().getCourseId());
+        Course course = courseService.findById(tab.getCourse().getCourseId(), null);
         if (course.getTeacher().getTeacher_id() != teacher.getTeacher_id()) throw new ResponseStatusException(HttpStatusCode.valueOf(400), "You are not the course teacher!");
 //        if (!course.getTabs().contains(tabsService.findById(tabId))) throw new ResponseStatusException(HttpStatusCode.valueOf(400), "This tab is not in this course!");
         return tabsService.editTab(tab, tabId);
+    }
+
+    @PostMapping("/complete/{courseId}/{tabId}")
+    public TabCompletion completeTab(@PathVariable Long courseId, @PathVariable Long tabId, HttpServletRequest httpServletRequest){
+        User user = userService.findByEmail(jwtTokenService.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
+        if (!user.getRole().toString().equals("STUDENT")) throw new ResponseStatusException(HttpStatusCode.valueOf(400), "You are not a student!");
+        Student student = studentService.findStudentByUserId(user.getId());
+
+        Tab tab = tabsService.findById(tabId, student.getStudent_id());
+        Course course = courseService.findById(courseId, student.getStudent_id());
+        if (enrollmentService.findEnrollmentByStudnentAndCourseIds(course.getCourseId(), student.getStudent_id()) == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You are not in this course!");
+        if (!tabsService.checkTabInCourse(course.getCourseId(), tabId)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This tab is not in this course!");
+        return tabCompletionService.insertTabCompletion(student.getStudent_id(), tabId);
+
     }
 }

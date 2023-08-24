@@ -79,11 +79,6 @@ public class CourseController {
         }
 
         @Override
-        public Course findById(Long courseId) {
-            return CourseService.super.findById(courseId);
-        }
-
-        @Override
         public PaginationResponse findUncompletedCourses(Long userId, int page, int pageSize) {
             return CourseService.super.findUncompletedCourses(userId, page, pageSize);
         }
@@ -179,7 +174,7 @@ public class CourseController {
         if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatusCode.valueOf(403), "JWT has expired!");
         User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
         Teacher teacher = teacherService.findByUserId(user.getId());
-        Course course = courseService.findById(courseId);
+        Course course = courseService.findById(courseId, null);
         if (!Objects.equals(course.getTeacher().getTeacher_id(), teacher.getTeacher_id())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You are not the course teacher!");
 
         if (!Objects.requireNonNull(file.getContentType()).startsWith("image/")) {
@@ -190,7 +185,7 @@ public class CourseController {
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
         courseService.setPicturePath(courseId, "course_" + course.getCourseId().toString() + "_" + file.getOriginalFilename());
 
-        return courseService.findById(courseId);
+        return courseService.findById(courseId, null);
     }
 
 
@@ -250,7 +245,11 @@ public class CourseController {
     public PaginationResponse findAll(@RequestParam int page, @RequestParam int pageSize, HttpServletRequest httpServletRequest){
         if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "JWT Token has expired!");
         User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
-        return courseService.findAll(studentService.findStudentByUserId(user.getId()).getStudent_id(), page, pageSize);
+        if (user.getRole().toString().equals("TEACHER")){
+            return courseService.findAll(null, page, pageSize);
+        }
+        else return courseService.findAll(studentService.findStudentByUserId(user.getId()).getStudent_id(), page, pageSize);
+
     }
 
     @PostMapping("/edit")
@@ -258,10 +257,10 @@ public class CourseController {
         if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatusCode.valueOf(403), "JWT has expired!");
         User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
         Teacher teacher = teacherService.findByUserId(user.getId());
-        Course entity = courseService.findById(course.getCourseId());
+        Course entity = courseService.findById(course.getCourseId(), null);
         if (!Objects.equals(entity.getTeacher().getTeacher_id(), teacher.getTeacher_id())) throw new RuntimeException("You are not the course teacher!");
         courseService.editCourse(course);
-        return courseService.findById(course.getCourseId());
+        return courseService.findById(course.getCourseId(), null);
     }
 
     @GetMapping("/findMyCourses") // get courses created by the teacher
@@ -274,9 +273,12 @@ public class CourseController {
 
     @GetMapping("/findCourseById/{courseId}")
     public Object findCourseById(@PathVariable Long courseId, HttpServletRequest httpServletRequest){
+        Course course = new Course();
         if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatusCode.valueOf(403), "JWT has expired!");
-        Course course = courseService.findById(courseId);
         User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
+        if (user.getRole().toString().equals("TEACHER")) course = courseService.findById(courseId, null);
+        else course = courseService.findById(courseId, studentService.findStudentByUserId(user.getId()).getStudent_id());
+
         if (user.getRole() == UserRoleEnum.TEACHER && course != null) return new CourseState(course, null);
         else if (user.getRole() == UserRoleEnum.STUDENT) {
             StateEnums stateEnum = null;

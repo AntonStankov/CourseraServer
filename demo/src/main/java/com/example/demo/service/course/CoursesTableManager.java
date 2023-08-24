@@ -3,10 +3,8 @@ package com.example.demo.service.course;
 
 import com.example.demo.config.DataSource;
 import com.example.demo.controller.PaginationResponse;
-import com.example.demo.entity.Course;
-import com.example.demo.entity.Tab;
-import com.example.demo.entity.Teacher;
-import com.example.demo.entity.User;
+import com.example.demo.entity.*;
+import com.example.demo.service.student.StudentService;
 import com.example.demo.service.tab.TabsService;
 import com.example.demo.service.teacher.TeacherService;
 import com.example.demo.service.user.UserService;
@@ -28,8 +26,8 @@ public class CoursesTableManager {
         }
 
         @Override
-        public List<Tab> findTabsByCourseId(Long courseId) {
-            return TabsService.super.findTabsByCourseId(courseId);
+        public List<Tab> findTabsByCourseId(Long courseId, Long studentId) {
+            return TabsService.super.findTabsByCourseId(courseId, studentId);
         }
     };
 
@@ -62,6 +60,33 @@ public class CoursesTableManager {
         }
     };
 
+    private StudentService studentService = new StudentService() {
+        @Override
+        public Student save(Student student, User user) {
+            return StudentService.super.save(student, user);
+        }
+
+        @Override
+        public Student findById(Long id) {
+            return StudentService.super.findById(id);
+        }
+
+        @Override
+        public Student findStudentByUserId(Long userId) {
+            return StudentService.super.findStudentByUserId(userId);
+        }
+
+        @Override
+        public Student changeName(String name, Long id) {
+            return StudentService.super.changeName(name, id);
+        }
+
+        @Override
+        public void addCredit(Long studentId, int credit) {
+            StudentService.super.addCredit(studentId, credit);
+        }
+    };
+
     private final DataSource datasource = new DataSource();
     public Course insertCourse(Course course, Teacher teacher) {
         Long generatedCourseId = null;
@@ -90,7 +115,7 @@ public class CoursesTableManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return getCourseById(generatedCourseId);
+        return getCourseById(generatedCourseId, null);
     }
 
     private void associateCourseWithTeacher(Connection connection, Long courseId, Long teacherId) {
@@ -103,7 +128,7 @@ public class CoursesTableManager {
             e.printStackTrace();
         }
     }
-    public Course getCourseById(Long courseId) {
+    public Course getCourseById(Long courseId, Long studentId) {
         Course course = null;
         try (Connection connection = datasource.createConnection()) {
             String sql = "SELECT c.*, t.*, u.* FROM courses c " +
@@ -122,7 +147,7 @@ public class CoursesTableManager {
                         course.setDuration(resultSet.getLong("duration"));
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
-                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
+                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId"), studentId));
                         course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
 
 
@@ -253,7 +278,7 @@ public class CoursesTableManager {
                         course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
-                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
+                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId"),studentService.findStudentByUserId(userId).getStudent_id()));
                         course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
 
                         courses.add(course);
@@ -331,7 +356,7 @@ public class CoursesTableManager {
                         course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
-                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
+                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId"), studentService.findStudentByUserId(userId).getStudent_id()));
                         course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
 
 
@@ -370,6 +395,7 @@ public class CoursesTableManager {
 
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     while (resultSet.next()) {
+                        Long studentId = 0L;
                         Course course = new Course();
                         course.setCourseId(resultSet.getLong("courseId"));
                         course.setCourseName(resultSet.getString("courseName"));
@@ -379,7 +405,8 @@ public class CoursesTableManager {
                         course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
-                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
+                        if (studentService.findStudentByUserId(userId) != null) studentId = studentService.findStudentByUserId(userId).getStudent_id();
+                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId"), studentId));
                         course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
 
 
@@ -407,7 +434,7 @@ public class CoursesTableManager {
     }
 
     public void addStudentsCount(Long courseId) {
-        Long count = getCourseById(courseId).getStudentsCount();
+        Long count = getCourseById(courseId, null).getStudentsCount();
         try (Connection connection = datasource.createConnection()) {
             String sql = "UPDATE courses SET students_count = ? WHERE courseId = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -459,7 +486,7 @@ public class CoursesTableManager {
                         course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
-                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
+                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId"), null));
                         course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
 
 
@@ -513,7 +540,7 @@ public class CoursesTableManager {
                         course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
-                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
+                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId"), null));
                         course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
 
 
