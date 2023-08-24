@@ -1,36 +1,28 @@
 package com.example.demo.entity;
 
-import com.example.demo.enums.TabContentType;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 @Entity
-@Table(name = "tabs")
-public class Tab {
+@Table(name = "tabCompletion")
+public class TabCompletion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long tab_id;
-
-    @Column
-    private String tabName;
-
-    @Column
-    private TabContentType contentType;
-
-    @Column
-    private String content;
+    private Long completion_id;
 
     @ManyToOne
-    private Course course;
+    private Student student;
 
-    @Column
-    private boolean completed;
+    @ManyToOne
+    private Tab tab;
 }

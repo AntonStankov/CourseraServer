@@ -14,16 +14,20 @@ public interface TabsService {
         return tabsTableManager.insertTab(tab, courseId);
     }
 
-    public default List<Tab> findTabsByCourseId(Long courseId){
-        return tabsTableManager.findTabsByCourseId(courseId);
+    public default List<Tab> findTabsByCourseId(Long courseId, Long studentId){
+        return tabsTableManager.findTabsByCourseId(courseId, studentId);
     }
 
     public default Tab editTab(Tab tab, Long id){
         return tabsTableManager.updateTab(tab, id);
     }
 
-    public default Tab findById(Long id){
-        return tabsTableManager.findTabById(id);
+    public default Tab findById(Long tabId, Long studentId){
+        return tabsTableManager.findTabById(tabId, studentId);
+    }
+
+    public default boolean checkTabInCourse(Long courseId, Long tabId){
+        return tabsTableManager.checkTabInCourse(courseId, tabId);
     }
 
 }

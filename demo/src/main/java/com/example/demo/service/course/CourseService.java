@@ -14,8 +14,8 @@ public interface CourseService {
         return coursesTableManager.insertCourse(course, teacher);
     }
 
-    public default Course findById(Long courseId){
-        return coursesTableManager.getCourseById(courseId);
+    public default Course findById(Long courseId, Long studentId){
+        return coursesTableManager.getCourseById(courseId, studentId);
     }
 
     public default PaginationResponse findUncompletedCourses(Long userId, int page, int pageSize){
