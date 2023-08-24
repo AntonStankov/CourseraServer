@@ -186,7 +186,9 @@ public class TabsTableManager {
                 preparedStatement.setLong(1, courseId);
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     while (resultSet.next()) {
-                        tab = findTabById(resultSet.getLong("tab_id"), studentId);
+                        tab = new Tab();
+                        tab.setTab_id(resultSet.getLong("tab_id"));
+                        tab.setTabName(resultSet.getString("tabName"));
                         tabs.add(tab);
                     }
                 }

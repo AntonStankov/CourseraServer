@@ -277,7 +277,7 @@ public class CourseController {
         if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatusCode.valueOf(403), "JWT has expired!");
         User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
         if (user.getRole().toString().equals("TEACHER")) course = courseService.findById(courseId, null);
-        else course = courseService.findById(courseId, studentService.findStudentByUserId(user.getId()).getStudent_id());
+        else course = courseService.findByIdTabs(courseId, studentService.findStudentByUserId(user.getId()).getStudent_id());
 
         if (user.getRole() == UserRoleEnum.TEACHER && course != null) return new CourseState(course, null);
         else if (user.getRole() == UserRoleEnum.STUDENT) {

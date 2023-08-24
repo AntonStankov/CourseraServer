@@ -254,4 +254,13 @@ public class TabsController {
         return tabCompletionService.insertTabCompletion(student.getStudent_id(), tabId);
 
     }
+
+    @GetMapping("/get/{courseId}/{tabId}")
+    public Tab getTabById(@PathVariable Long courseId, @PathVariable Long tabId, HttpServletRequest httpServletRequest){
+        User user = userService.findByEmail(jwtTokenService.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
+        Student student = studentService.findStudentByUserId(user.getId());
+        Course course = courseService.findById(courseId, student.getStudent_id());
+        if (!tabsService.checkTabInCourse(course.getCourseId(), tabId)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This tab is not in this course!");
+        return tabsService.findById(tabId, student.getStudent_id());
+    }
 }
