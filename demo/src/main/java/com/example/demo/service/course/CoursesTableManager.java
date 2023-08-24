@@ -293,7 +293,7 @@ public class CoursesTableManager {
     }
 
 
-    public PaginationResponse findCompletedCourses(Long userId, int page, int pageSize, Boolean completed) {
+    public PaginationResponse findCompletedCourses(Long studentId, int page, int pageSize, Boolean completed) {
 
         Long totalSavings = 0L;
         List<Course> courses = new ArrayList<>();
@@ -307,7 +307,7 @@ public class CoursesTableManager {
                     "WHERE e.student_id = ? AND e.course_id = c.courseId AND e.completed = ?)";
 
             try (PreparedStatement countStatement = connection.prepareStatement(countSql)) {
-                countStatement.setLong(1, userId);
+                countStatement.setLong(1, studentId);
                 countStatement.setBoolean(2, completed);
                 try (ResultSet countResultSet = countStatement.executeQuery()) {
                     if (countResultSet.next()) {
@@ -332,11 +332,11 @@ public class CoursesTableManager {
 
             sql += "LIMIT ? OFFSET ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setLong(1, userId);
+                preparedStatement.setLong(1, studentId);
                 preparedStatement.setBoolean(2, completed);
 
                 if (completed) {
-                    preparedStatement.setLong(3, userId);
+                    preparedStatement.setLong(3, studentId);
                     preparedStatement.setBoolean(4, completed);
                     preparedStatement.setInt(5, pageSize);
                     preparedStatement.setInt(6, (page - 1) * pageSize);
@@ -356,7 +356,7 @@ public class CoursesTableManager {
                         course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
-                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId"), studentService.findStudentByUserId(userId).getStudent_id()));
+                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId"), studentId));
                         course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
 
 
