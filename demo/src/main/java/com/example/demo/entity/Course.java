@@ -51,4 +51,6 @@ public class Course {
     @Column
     private LocalDateTime time_created;
 
+    @OneToOne
+    private Quiz quiz;
 }

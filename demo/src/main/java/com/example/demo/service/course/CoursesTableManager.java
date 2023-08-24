@@ -147,6 +147,46 @@ public class CoursesTableManager {
                         course.setDuration(resultSet.getLong("duration"));
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
+                        course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
+
+
+                        // Create a Teacher object and set its attributes
+                        Teacher teacher = new Teacher();
+                        teacher.setTeacher_id(resultSet.getLong("teacher_id"));
+                        teacher.setName(resultSet.getString("name"));
+                        teacher.setUser(userService.findByEmail(resultSet.getString("email")));
+                        // Set other teacher attributes
+
+                        // Set the Teacher object for the Course
+                        course.setTeacher(teacher);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            // Handle the exception
+        }
+        return course;
+    }
+
+    public Course getCourseByIdWithTabs(Long courseId, Long studentId) {
+        Course course = null;
+        try (Connection connection = datasource.createConnection()) {
+            String sql = "SELECT c.*, t.*, u.* FROM courses c " +
+                    "JOIN teachers t ON c.teacher_id = t.teacher_id " +
+                    "JOIN app_users u ON t.user_id = u.id " +
+                    "WHERE c.courseId = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setLong(1, courseId);
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        course = new Course();
+                        course.setCourseId(resultSet.getLong("courseId"));
+                        course.setCourseName(resultSet.getString("courseName"));
+                        course.setCredit(resultSet.getInt("credit"));
+                        course.setDescription(resultSet.getString("description"));
+                        course.setDuration(resultSet.getLong("duration"));
+                        course.setPicturePath(resultSet.getString("picture_path"));
+                        course.setStudentsCount(resultSet.getLong("students_count"));
                         course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId"), studentId));
                         course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
 
@@ -278,7 +318,6 @@ public class CoursesTableManager {
                         course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
-                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId"), studentId));
                         course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
 
                         courses.add(course);
@@ -356,7 +395,6 @@ public class CoursesTableManager {
                         course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
-                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId"), studentId));
                         course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
 
 
@@ -406,7 +444,6 @@ public class CoursesTableManager {
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
                         if (studentService.findStudentByUserId(userId) != null) studentId = studentService.findStudentByUserId(userId).getStudent_id();
-                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId"), studentId));
                         course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
 
 
@@ -486,7 +523,6 @@ public class CoursesTableManager {
                         course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
-                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId"), null));
                         course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
 
 
@@ -540,7 +576,6 @@ public class CoursesTableManager {
                         course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
-                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId"), null));
                         course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
 
 

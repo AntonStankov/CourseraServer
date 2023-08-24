@@ -18,6 +18,10 @@ public interface CourseService {
         return coursesTableManager.getCourseById(courseId, studentId);
     }
 
+    public default Course findByIdTabs(Long courseId, Long studentId){
+        return coursesTableManager.getCourseByIdWithTabs(courseId, studentId);
+    }
+
     public default PaginationResponse findUncompletedCourses(Long studentId, int page, int pageSize){
         return coursesTableManager.findUncompletedCourses(studentId, page, pageSize);
     }
