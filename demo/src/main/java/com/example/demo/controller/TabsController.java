@@ -260,6 +260,7 @@ public class TabsController {
         User user = userService.findByEmail(jwtTokenService.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
         Student student = studentService.findStudentByUserId(user.getId());
         Course course = courseService.findById(courseId, student.getStudent_id());
+        if (enrollmentService.findEnrollmentByStudnentAndCourseIds(courseId, student.getStudent_id()) == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You are not in this course!");
         if (!tabsService.checkTabInCourse(course.getCourseId(), tabId)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This tab is not in this course!");
         return tabsService.findById(tabId, student.getStudent_id());
     }
