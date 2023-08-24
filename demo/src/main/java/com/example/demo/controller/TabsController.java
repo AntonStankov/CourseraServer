@@ -96,8 +96,8 @@ public class TabsController {
         }
 
         @Override
-        public PaginationResponse findUncompletedCourses(Long userId, int page, int pageSize) {
-            return CourseService.super.findUncompletedCourses(userId, page, pageSize);
+        public PaginationResponse findUncompletedCourses(Long studentId, int page, int pageSize) {
+            return CourseService.super.findUncompletedCourses(studentId, page, pageSize);
         }
 
         @Override

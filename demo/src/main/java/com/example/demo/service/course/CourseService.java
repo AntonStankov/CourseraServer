@@ -18,8 +18,8 @@ public interface CourseService {
         return coursesTableManager.getCourseById(courseId, studentId);
     }
 
-    public default PaginationResponse findUncompletedCourses(Long userId, int page, int pageSize){
-        return coursesTableManager.findUncompletedCourses(userId, page, pageSize);
+    public default PaginationResponse findUncompletedCourses(Long studentId, int page, int pageSize){
+        return coursesTableManager.findUncompletedCourses(studentId, page, pageSize);
     }
 
     public default PaginationResponse findCompleteCourses(Long studentId, int page, int pageSize, Boolean completed){
