@@ -234,7 +234,7 @@ public class CoursesTableManager {
         }
     }
 
-    public PaginationResponse findUncompletedCourses(Long userId, int page, int pageSize) {
+    public PaginationResponse findUncompletedCourses(Long studentId, int page, int pageSize) {
         Long totalSavings = 0L;
         List<Course> courses = new ArrayList<Course>();
 
@@ -246,7 +246,7 @@ public class CoursesTableManager {
                     "WHERE e.student_id = ? AND e.course_id = c.courseId)";
 
             try (PreparedStatement countStatement = connection.prepareStatement(countSql)) {
-                countStatement.setLong(1, userId);
+                countStatement.setLong(1, studentId);
                 try (ResultSet countResultSet = countStatement.executeQuery()) {
                     if (countResultSet.next()) {
                         totalSavings = countResultSet.getLong("savings_count");
@@ -263,7 +263,7 @@ public class CoursesTableManager {
                     "LIMIT ? OFFSET ?";
 
             try (PreparedStatement dataStatement = connection.prepareStatement(dataSql)) {
-                dataStatement.setLong(1, userId);
+                dataStatement.setLong(1, studentId);
                 dataStatement.setInt(2, pageSize);
                 dataStatement.setInt(3, (page - 1) * pageSize);
 
@@ -278,7 +278,7 @@ public class CoursesTableManager {
                         course.setTeacher(teacherService.findById(resultSet.getLong("teacher_id")));
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
-                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId"),studentService.findStudentByUserId(userId).getStudent_id()));
+                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId"), studentId));
                         course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
 
                         courses.add(course);
