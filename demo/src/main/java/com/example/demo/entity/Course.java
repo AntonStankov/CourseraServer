@@ -50,4 +50,5 @@ public class Course {
 
     @Column
     private LocalDateTime time_created;
+
 }

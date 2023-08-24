@@ -22,8 +22,8 @@ public interface CourseService {
         return coursesTableManager.findUncompletedCourses(userId, page, pageSize);
     }
 
-    public default PaginationResponse findCompleteCourses(Long userId, int page, int pageSize, Boolean completed){
-        return coursesTableManager.findCompletedCourses(userId, page, pageSize, completed);
+    public default PaginationResponse findCompleteCourses(Long studentId, int page, int pageSize, Boolean completed){
+        return coursesTableManager.findCompletedCourses(studentId, page, pageSize, completed);
     }
 
     public default PaginationResponse findAll(Long userId, int page, int pageSize){
