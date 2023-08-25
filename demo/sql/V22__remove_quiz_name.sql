@@ -1,0 +1,2 @@
+ALTER TABLE quiz
+DROP COLUMN quizName;
