@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.entity.*;
+import com.example.demo.enums.TabContentType;
 import com.example.demo.jwt.JwtTokenService;
 import com.example.demo.service.course.CourseService;
 import com.example.demo.service.course.UserState;
@@ -11,14 +12,19 @@ import com.example.demo.service.tabCompletion.TabCompletionService;
 import com.example.demo.service.teacher.TeacherService;
 import com.example.demo.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.ws.rs.Path;
 import org.checkerframework.checker.tainting.qual.PolyTainted;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:5173")
@@ -219,14 +225,37 @@ public class TabsController {
             return EnrollmentService.super.findEnrollmentByStudnentAndCourseIds(courseId, studentId);
         }
     };
+//    String tabName;
+//    private TabContentType contentType;
+//    private String content;
+//    private Long courseId;
+//    private MultipartFile file;
 
     @PostMapping("/create")
-    public Tab createTab(@RequestBody Tab tab, HttpServletRequest httpServletRequest){
+    public Tab createTab(@RequestParam String tabName,
+                         @RequestParam TabContentType contentType,
+                         @RequestParam String content,
+                         @RequestParam Long courseId,
+                         @RequestParam MultipartFile file, HttpServletRequest httpServletRequest) throws IOException {
         User user = userService.findByEmail(jwtTokenService.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
         if (user.getRole().toString().equals("STUDENT")) throw new ResponseStatusException(HttpStatusCode.valueOf(400), "You are not a teacher!");
         Teacher teacher = teacherService.findByUserId(user.getId());
-        Course course = courseService.findById(tab.getCourse().getCourseId(), null);
+        Course course = courseService.findById(courseId, null);
         if (course.getTeacher().getTeacher_id() != teacher.getTeacher_id()) throw new ResponseStatusException(HttpStatusCode.valueOf(400), "You are not the course teacher!");
+        Tab tab = new Tab();
+        tab.setTabName(tabName);
+        tab.setContentType(contentType);
+        Course course1 = new Course();
+        course1.setCourseId(courseId);
+        tab.setCourse(course1);
+        if (contentType.toString().equals("TEXT")){
+            tab.setContent(content);
+        }
+        else {
+            Path filePath = Paths.get("src/main/resources/static/", "tab_" + tabName + courseId + "_" + file.getOriginalFilename());
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            tab.setContent("tab_" + tabName + courseId + "_" + file.getOriginalFilename());
+        }
         return tabsService.insertTab(tab, course.getCourseId());
     }
 

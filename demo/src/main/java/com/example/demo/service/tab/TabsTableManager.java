@@ -109,6 +109,7 @@ public class TabsTableManager {
     private final DataSource datasource = new DataSource();
 
     public Tab insertTab(Tab tab, Long courseId) {
+        if (tab.getContent() == null) tab.setContent("");
         Long generatedTabId = null;
         try (Connection connection = datasource.createConnection()) {
             String sql = "INSERT INTO tabs (contentType, content, course_id, tabName) VALUES (?, ?, ?, ?)";
