@@ -5,6 +5,7 @@ import com.example.demo.config.DataSource;
 import com.example.demo.controller.PaginationResponse;
 import com.example.demo.entity.*;
 import com.example.demo.service.course.CourseService;
+import com.example.demo.service.course.UserState;
 import com.example.demo.service.student.StudentService;
 import com.example.demo.service.tab.TabsService;
 import com.example.demo.service.user.UserService;
@@ -129,13 +130,11 @@ public class QuizTableManager {
     };
 
 
-    public Quiz insertQuiz(String quizName) {
+    public Quiz insertQuiz(String quizName, Long courseId) {
         Long generatedQuizId = null;
         try (Connection connection = datasource.createConnection()) {
-            String sql = "INSERT INTO quiz (quizName) VALUES (?)";
+            String sql = "INSERT INTO quiz () VALUES ()";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-                preparedStatement.setString(1, quizName);
-//                preparedStatement.setTimestamp(4, Timestamp.valueOf(LocalDateTime.MAX));
                 int affectedRows = preparedStatement.executeUpdate();
                 if (affectedRows > 0) {
                     ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
@@ -147,7 +146,21 @@ public class QuizTableManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        addQuizToCourse(generatedQuizId, courseId);
         return getQuizById(generatedQuizId);
+    }
+
+    public void addQuizToCourse(Long quiz_id, Long courseId) {
+        try (Connection connection = datasource.createConnection()) {
+            String sql = "UPDATE courses SET quiz_id = ? WHERE courseId = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setLong(1, quiz_id);
+                preparedStatement.setLong(2, courseId);
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public Quiz getQuizById(Long quizId) {
@@ -160,10 +173,30 @@ public class QuizTableManager {
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     if (resultSet.next()) {
                         quiz = new Quiz();
-                        quiz.setQuizName(resultSet.getString("quizName"));
                         quiz.setQuiz_id(resultSet.getLong("quiz_id"));
                         quiz.setQuestions(getQuestionsByQuizId(resultSet.getLong("quiz_id")));
 
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            //
+        }
+        return quiz;
+    }
+
+    public Quiz getQuizByCourseId(Long courseId) {
+        Quiz quiz = null;
+        try (Connection connection = datasource.createConnection()) {
+            String sql = "SELECT * FROM quiz e " +
+                    "WHERE EXISTS (SELECT * FROM courses s WHERE s.quiz_id = e.quiz_id AND s.courseId = ?)";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setLong(1, courseId);
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        quiz = new Quiz();
+                        quiz.setQuiz_id(resultSet.getLong("quiz_id"));
+                        quiz.setQuestions(getQuestionsByQuizId(resultSet.getLong("quiz_id")));
                     }
                 }
             }
@@ -172,7 +205,6 @@ public class QuizTableManager {
         }
         return quiz;
     }
-
     public List<Question> getQuestionsByQuizId(Long quizId) {
         List<Question> questions = new ArrayList<>();
         try (Connection connection = datasource.createConnection()) {
@@ -227,17 +259,17 @@ public class QuizTableManager {
     public Question getQuestionById(Long questionId) {
         Question question = null;
         try (Connection connection = datasource.createConnection()) {
-            String sql = "SELECT * FROM answers e " +
+            String sql = "SELECT * FROM question e " +
                     "WHERE e.question_id = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setLong(1, questionId);
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     if (resultSet.next()) {
                         question = new Question();
-                        question.setQuiz(getQuizById(resultSet.getLong("quiz_id")));
                         question.setQuestion_id(resultSet.getLong("question_id"));
                         question.setQuestion(resultSet.getString("question"));
                         question.setRightAnswer(resultSet.getString("rightAnswer"));
+                        question.setAnswers(getAnswersByQuestionId(questionId));
                     }
                 }
             }
@@ -247,6 +279,94 @@ public class QuizTableManager {
         return question;
     }
 
+    public Question insertQuestion(Long quizId, String question, String rightAnswer) {
+        Long generatedQuestionId = null;
+        try (Connection connection = datasource.createConnection()) {
+            String sql = "INSERT INTO question (quiz_id, question, rightAnswer) VALUES (?, ?, ?)";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                preparedStatement.setLong(1, quizId);
+                preparedStatement.setString(2, question);
+                preparedStatement.setString(3, rightAnswer);
+                int affectedRows = preparedStatement.executeUpdate();
+                if (affectedRows > 0) {
+                    ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
+                    if (generatedKeys.next()) {
+                        generatedQuestionId = generatedKeys.getLong(1);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return getQuestionById(generatedQuestionId);
+    }
+
+
+    public Answers insertAnswer(Long questionId, String answer) {
+        Long generatedAnswerId = null;
+        try (Connection connection = datasource.createConnection()) {
+            String sql = "INSERT INTO answers (question_id, answer) VALUES (?, ?)";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                preparedStatement.setLong(1, questionId);
+                preparedStatement.setString(2, answer);
+                int affectedRows = preparedStatement.executeUpdate();
+                if (affectedRows > 0) {
+                    ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
+                    if (generatedKeys.next()) {
+                        generatedAnswerId = generatedKeys.getLong(1);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return getAnswerById(generatedAnswerId);
+    }
+
+    private Answers getAnswerById(Long answerId) {
+        Answers answer = null;
+        try (Connection connection = datasource.createConnection()){
+            String sql = "SELECT * FROM answers WHERE answer_id = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)){
+                preparedStatement.setLong(1, answerId);
+                try (ResultSet resultSet = preparedStatement.executeQuery()){
+                    if (resultSet.next()){
+                        answer = new Answers();
+                        answer.setAnswer_id(resultSet.getLong("answer_id"));
+                        answer.setAnswer(resultSet.getString("answer"));
+                        answer.setQuestion(getQuestionById(resultSet.getLong("question_id")));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return answer;
+    }
+
+    public boolean checkQuestionInQuiz(Long quizId, Long questionId) {
+        boolean checked = false;
+        try (Connection connection = datasource.createConnection()) {
+            String sql = "SELECT CASE " +
+                    "    WHEN EXISTS (SELECT * FROM question e WHERE e.quiz_id = ? AND e.question_id = ?) " +
+                    "    THEN TRUE " +
+                    "    ELSE FALSE " +
+                    "END AS checked;";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+                preparedStatement.setLong(1, quizId);
+                preparedStatement.setLong(2, questionId);
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        checked = resultSet.getBoolean("checked");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            // Handle the exception
+        }
+        return checked;
+    }
 
 
 }
