@@ -43,7 +43,7 @@ public class SecurityConfig implements WebMvcConfigurer {
 
     @Bean
     WebSecurityCustomizer webSecurityCustomizer() {
-        return web -> web.ignoring().requestMatchers("/user/login", "/user/register");
+        return web -> web.ignoring().requestMatchers("/user/login", "/user/register", "/actuator/refresh");
     }
 
 

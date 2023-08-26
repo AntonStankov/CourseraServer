@@ -39,3 +39,4 @@ src/main/resources/application.properties
 src/main/resources/userImages/**
 userFiles/**
 coursesFiles/**
+src/main/resources/static/**

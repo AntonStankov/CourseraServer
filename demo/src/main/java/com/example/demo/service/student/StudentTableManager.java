@@ -89,11 +89,12 @@ public class StudentTableManager {
 
 
     public Student getStudentByUserId(Long userId) {
+        if (userId == null) userId = 0L;
         Student student = null;
         try (Connection connection = datasource.createConnection()) {
             String sql = "SELECT * FROM students s " +
                     "JOIN app_users a ON s.user_id = a.id " +
-                    "WHERE user_id = ?";
+                    "WHERE s.user_id = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setLong(1, userId);
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {

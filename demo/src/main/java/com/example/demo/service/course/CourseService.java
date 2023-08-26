@@ -14,16 +14,20 @@ public interface CourseService {
         return coursesTableManager.insertCourse(course, teacher);
     }
 
-    public default Course findById(Long courseId){
-        return coursesTableManager.getCourseById(courseId);
+    public default Course findById(Long courseId, Long studentId){
+        return coursesTableManager.getCourseById(courseId, studentId);
     }
 
-    public default PaginationResponse findUncompletedCourses(Long userId, int page, int pageSize){
-        return coursesTableManager.findUncompletedCourses(userId, page, pageSize);
+    public default Course findByIdTabs(Long courseId, Long studentId){
+        return coursesTableManager.getCourseByIdWithTabs(courseId, studentId);
     }
 
-    public default PaginationResponse findCompleteCourses(Long userId, int page, int pageSize, Boolean completed){
-        return coursesTableManager.findCompletedCourses(userId, page, pageSize, completed);
+    public default PaginationResponse findUncompletedCourses(Long studentId, int page, int pageSize){
+        return coursesTableManager.findUncompletedCourses(studentId, page, pageSize);
+    }
+
+    public default PaginationResponse findCompleteCourses(Long studentId, int page, int pageSize, Boolean completed){
+        return coursesTableManager.findCompletedCourses(studentId, page, pageSize, completed);
     }
 
     public default PaginationResponse findAll(Long userId, int page, int pageSize){
@@ -44,5 +48,13 @@ public interface CourseService {
 
     public default PaginationResponse findTeachersCourses(Long teacherId, int page, int pageSize){
         return coursesTableManager.findTeachersCourses(teacherId, page, pageSize);
+    }
+
+    public default PaginationResponse searchAllCoursesByName(int page, int pageSize, String name){
+        return coursesTableManager.searchAllCoursesByName(page, pageSize, name);
+    }
+
+    public default UserState checkEnrollment(Long courseId, Long studentId){
+        return coursesTableManager.checkEnrollment(courseId, studentId);
     }
 }

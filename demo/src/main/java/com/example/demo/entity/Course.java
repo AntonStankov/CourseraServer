@@ -7,6 +7,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Locale;
+
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -40,4 +44,13 @@ public class Course {
 
     @Column
     private Long studentsCount;
+
+    @OneToMany
+    private List<Tab> tabs;
+
+    @Column
+    private LocalDateTime time_created;
+
+    @OneToOne
+    private Quiz quiz;
 }

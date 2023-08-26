@@ -38,4 +38,11 @@ public interface UserService {
         tableManager.updateUser(path, userId);
     }
 
+    public default User findUserByStudentId(Long studentId){
+        return tableManager.findUserByStudentId(studentId);
+    }
+
+    public default User findUserByTeacherId(Long teacherId){
+        return tableManager.findUserByTeacherId(teacherId);
+    }
 }

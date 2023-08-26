@@ -16,4 +16,8 @@ public interface EnrollmentService {
     public default Enrollment updateEnrollment(Long courseId, Long studentId){
         return enrollmentTableManager.updateEnrollment(courseId, studentId);
     }
+
+    public default Long findEnrollmentByStudnentAndCourseIds(Long courseId, Long studentId){
+        return enrollmentTableManager.findEnrollmentByStudentAndCourseIds(courseId, studentId);
+    }
 }

@@ -1,13 +1,18 @@
 package com.example.demo.controller;
 
 import com.example.demo.entity.*;
+import com.example.demo.enums.StateEnums;
+import com.example.demo.enums.UserRoleEnum;
 import com.example.demo.jwt.JwtTokenService;
 import com.example.demo.service.course.CourseService;
+import com.example.demo.service.course.UserState;
 import com.example.demo.service.enrollment.EnrollmentService;
+import com.example.demo.service.secrets.SecretsService;
 import com.example.demo.service.student.StudentService;
 import com.example.demo.service.teacher.TeacherService;
 import com.example.demo.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jdk.jfr.ContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -18,7 +23,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.http.HttpClient;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -69,13 +79,8 @@ public class CourseController {
         }
 
         @Override
-        public Course findById(Long courseId) {
-            return CourseService.super.findById(courseId);
-        }
-
-        @Override
-        public PaginationResponse findUncompletedCourses(Long userId, int page, int pageSize) {
-            return CourseService.super.findUncompletedCourses(userId, page, pageSize);
+        public PaginationResponse findUncompletedCourses(Long studentId, int page, int pageSize) {
+            return CourseService.super.findUncompletedCourses(studentId, page, pageSize);
         }
 
         @Override
@@ -107,6 +112,16 @@ public class CourseController {
         public PaginationResponse findTeachersCourses(Long teacherId, int page, int pageSize) {
             return CourseService.super.findTeachersCourses(teacherId, page, pageSize);
         }
+
+        @Override
+        public PaginationResponse searchAllCoursesByName(int page, int pageSize, String name) {
+            return CourseService.super.searchAllCoursesByName(page, pageSize, name);
+        }
+
+        @Override
+        public UserState checkEnrollment(Long courseId, Long studentId) {
+            return CourseService.super.checkEnrollment(courseId, studentId);
+        }
     };
 
     private TeacherService teacherService = new TeacherService() {
@@ -125,11 +140,20 @@ public class CourseController {
 
         @Override
         public Enrollment updateEnrollment(Long courseId, Long studentId) {
-           return EnrollmentService.super.updateEnrollment(courseId, studentId);
+            return EnrollmentService.super.updateEnrollment(courseId, studentId);
+        }
+
+        @Override
+        public Long findEnrollmentByStudnentAndCourseIds(Long courseId, Long studentId) {
+            return EnrollmentService.super.findEnrollmentByStudnentAndCourseIds(courseId, studentId);
         }
     };
 
-    private String coursesImages = "coursesFiles/";
+    private String coursesImages = "src/main/resources/static/";
+
+    String url = "https://localhost:8080/actuator/refresh";
+
+
 
     @PostMapping("/create")
     public Course create(@RequestBody Course course, HttpServletRequest httpServletRequest){
@@ -147,15 +171,21 @@ public class CourseController {
 
     @PostMapping("/setPicture/{courseId}")
     public Course setPicture(@RequestParam MultipartFile file, @PathVariable Long courseId, HttpServletRequest httpServletRequest) throws IOException {
+        if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatusCode.valueOf(403), "JWT has expired!");
         User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
         Teacher teacher = teacherService.findByUserId(user.getId());
-        Course course = courseService.findById(courseId);
-        if (!Objects.equals(course.getTeacher().getTeacher_id(), teacher.getTeacher_id())) throw new RuntimeException("You are not the course teacher!");
+        Course course = courseService.findById(courseId, null);
+        if (!Objects.equals(course.getTeacher().getTeacher_id(), teacher.getTeacher_id())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You are not the course teacher!");
 
-        Path filePath = Paths.get(coursesImages, file.getOriginalFilename());
+        if (!Objects.requireNonNull(file.getContentType()).startsWith("image/")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Uploaded file is not an image.");
+        }
+
+        Path filePath = Paths.get(coursesImages, "course_" + course.getCourseId().toString() + "_" + file.getOriginalFilename());
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-        courseService.setPicturePath(courseId, coursesImages + file.getOriginalFilename());
-        return courseService.findById(courseId);
+        courseService.setPicturePath(courseId, "course_" + course.getCourseId().toString() + "_" + file.getOriginalFilename());
+
+        return courseService.findById(courseId, null);
     }
 
 
@@ -168,6 +198,7 @@ public class CourseController {
 
         if (!user.getRole().toString().equals("STUDENT")) throw new RuntimeException("You are not a student!");
         else {
+            if (enrollmentService.findEnrollmentByStudnentAndCourseIds(courseId, studentService.findStudentByUserId(user.getId()).getStudent_id()) != null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Already signed for this course!");
             return enrollmentService.save(studentService.findStudentByUserId(user.getId()).getStudent_id(), courseId);
         }
     }
@@ -183,7 +214,9 @@ public class CourseController {
 
         if (!user.getRole().toString().equals("STUDENT")) throw new RuntimeException("You are not a student!");
         else {
-            return enrollmentService.updateEnrollment(courseId, studentService.findStudentByUserId(user.getId()).getStudent_id());
+            Enrollment enrollment = enrollmentService.updateEnrollment(courseId, studentService.findStudentByUserId(user.getId()).getStudent_id());
+            if (enrollment != null) return enrollment;
+            else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Already completed this course!");
         }
     }
 
@@ -212,26 +245,56 @@ public class CourseController {
     public PaginationResponse findAll(@RequestParam int page, @RequestParam int pageSize, HttpServletRequest httpServletRequest){
         if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "JWT Token has expired!");
         User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
-        if (!user.getRole().toString().equals("STUDENT")) throw new RuntimeException("You are not a student!");
-        else {
-            return courseService.findAll(studentService.findStudentByUserId(user.getId()).getStudent_id(), page, pageSize);
+        if (user.getRole().toString().equals("TEACHER")){
+            return courseService.findAll(null, page, pageSize);
         }
+        else return courseService.findAll(studentService.findStudentByUserId(user.getId()).getStudent_id(), page, pageSize);
+
     }
 
     @PostMapping("/edit")
     public Course editCourse(@RequestBody Course course, HttpServletRequest httpServletRequest){
+        if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatusCode.valueOf(403), "JWT has expired!");
         User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
         Teacher teacher = teacherService.findByUserId(user.getId());
-        Course entity = courseService.findById(course.getCourseId());
+        Course entity = courseService.findById(course.getCourseId(), null);
         if (!Objects.equals(entity.getTeacher().getTeacher_id(), teacher.getTeacher_id())) throw new RuntimeException("You are not the course teacher!");
         courseService.editCourse(course);
-        return courseService.findById(course.getCourseId());
+        return courseService.findById(course.getCourseId(), null);
     }
 
     @GetMapping("/findMyCourses") // get courses created by the teacher
     public PaginationResponse findMyCourses(@RequestParam int page, @RequestParam int pageSize, HttpServletRequest httpServletRequest){
+        if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatusCode.valueOf(403), "JWT has expired!");
         User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
         Teacher teacher = teacherService.findByUserId(user.getId());
         return courseService.findTeachersCourses(teacher.getTeacher_id(), page, pageSize);
+    }
+
+    @GetMapping("/findCourseById/{courseId}")
+    public Object findCourseById(@PathVariable Long courseId, HttpServletRequest httpServletRequest){
+        Course course = new Course();
+        if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatusCode.valueOf(403), "JWT has expired!");
+        User user = userService.findByEmail(jwtTokenUtil.getEmailFromToken(jwtTokenUtil.getTokenFromRequest(httpServletRequest)));
+        if (user.getRole().toString().equals("TEACHER")) course = courseService.findById(courseId, null);
+        else course = courseService.findByIdTabs(courseId, studentService.findStudentByUserId(user.getId()).getStudent_id());
+
+        if (user.getRole() == UserRoleEnum.TEACHER && course != null) return new CourseState(course, null);
+        else if (user.getRole() == UserRoleEnum.STUDENT) {
+            StateEnums stateEnum = null;
+            UserState userState = courseService.checkEnrollment(courseId, studentService.findStudentByUserId(user.getId()).getStudent_id());
+            if (userState.isEnrolled() && userState.isCompleted()) stateEnum = StateEnums.COMPLETED;
+            else if (userState.isEnrolled() && !userState.isCompleted()) stateEnum = StateEnums.CAN_COMPLETE;
+            else if (!userState.isEnrolled()) stateEnum = StateEnums.CAN_ENROLL;
+            return new CourseState(course, stateEnum);
+        }
+        else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is no course with id: " + courseId.toString());
+    }
+
+    @GetMapping("/findAllByName")
+    public PaginationResponse findAllByName(@RequestParam int page, @RequestParam int pageSize, @RequestParam String name, HttpServletRequest httpServletRequest){
+        if (jwtTokenUtil.isTokenExpired(jwtTokenUtil.getTokenFromRequest(httpServletRequest))) throw new ResponseStatusException(HttpStatusCode.valueOf(403), "JWT has expired!");
+
+        return courseService.searchAllCoursesByName(page, pageSize, name);
     }
 }
