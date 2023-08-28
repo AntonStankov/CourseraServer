@@ -27,6 +27,8 @@ public class Question {
 
     private String rightAnswer;
 
+    private int points;
+
     @OneToMany
     List<Answers> answers;
 }

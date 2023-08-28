@@ -217,6 +217,7 @@ public class QuizTableManager {
                         Question question = new Question();
                         question.setQuestion_id(resultSet.getLong("question_id"));
                         question.setQuestion(resultSet.getString("question"));
+                        question.setPoints(resultSet.getInt("points"));
                         if (teacher) question.setRightAnswer(resultSet.getString("rightAnswer"));
                         question.setAnswers(getAnswersByQuestionId(resultSet.getLong("question_id")));
 
@@ -268,6 +269,7 @@ public class QuizTableManager {
                         question = new Question();
                         question.setQuestion_id(resultSet.getLong("question_id"));
                         question.setQuestion(resultSet.getString("question"));
+                        question.setPoints(resultSet.getInt("points"));
                         question.setRightAnswer(resultSet.getString("rightAnswer"));
                         question.setAnswers(getAnswersByQuestionId(questionId));
                     }
@@ -279,14 +281,15 @@ public class QuizTableManager {
         return question;
     }
 
-    public Question insertQuestion(Long quizId, String question, String rightAnswer) {
+    public Question insertQuestion(Long quizId, String question, String rightAnswer, int points) {
         Long generatedQuestionId = null;
         try (Connection connection = datasource.createConnection()) {
-            String sql = "INSERT INTO question (quiz_id, question, rightAnswer) VALUES (?, ?, ?)";
+            String sql = "INSERT INTO question (quiz_id, question, rightAnswer, points) VALUES (?, ?, ?, ?)";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 preparedStatement.setLong(1, quizId);
                 preparedStatement.setString(2, question);
                 preparedStatement.setString(3, rightAnswer);
+                preparedStatement.setInt(4, points);
                 int affectedRows = preparedStatement.executeUpdate();
                 if (affectedRows > 0) {
                     ResultSet generatedKeys = preparedStatement.getGeneratedKeys();

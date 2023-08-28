@@ -18,7 +18,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
@@ -92,8 +94,8 @@ public class QuizController {
         }
 
         @Override
-        public Question insertQuestion(Long quizId, String question, String rightAnswer) {
-            return QuizService.super.insertQuestion(quizId, question, rightAnswer);
+        public Question insertQuestion(Long quizId, String question, String rightAnswer, int points) {
+            return QuizService.super.insertQuestion(quizId, question, rightAnswer, points);
         }
 
         @Override
@@ -254,7 +256,7 @@ public class QuizController {
         }
 
         for (int i = 0; i < questions.size(); i++){
-            Question question = quizService.insertQuestion(quiz.getQuiz_id(), questions.get(i).getQuestion(), questions.get(i).getRightAnswer());
+            Question question = quizService.insertQuestion(quiz.getQuiz_id(), questions.get(i).getQuestion(), questions.get(i).getRightAnswer(), questions.get(i).getPoints());
             for (int j = 0; j < questions.get(i).getAnswers().size(); j++){
                 quizService.insertAnswer(question.getQuestion_id(), questions.get(i).getAnswers().get(j).getAnswer());
             }
@@ -297,5 +299,42 @@ public class QuizController {
             }
             else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You are not in this course!");
         }
+    }
+
+    @PostMapping("/complete/{courseId}")
+    public int completeQuiz(@PathVariable Long courseId, @RequestBody List<AnswersRequest> request, HttpServletRequest httpServletRequest){
+        int result = 0;
+        User user = userService.findByEmail(jwtTokenService.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
+        Course course = new Course();
+        Student student = new Student();
+
+        List<Question> questions = new ArrayList<>();
+        if (user.getRole().equals(UserRoleEnum.STUDENT)){
+            student = studentService.findStudentByUserId(user.getId());
+            course =  courseService.findById(courseId, student.getStudent_id());
+        }
+        else course = courseService.findById(courseId, null);
+
+        if (user.getRole().equals(UserRoleEnum.TEACHER)){
+            questions =  quizService.getQuestionsByQuizId(quizService.getQuizByCourseId(courseId).getQuiz_id(), user.getRole().equals(UserRoleEnum.TEACHER));
+        }
+        else {
+            if (enrollmentService.findEnrollmentByStudnentAndCourseIds(courseId, student.getStudent_id()) != null){
+                questions =  quizService.getQuestionsByQuizId(quizService.getQuizByCourseId(courseId).getQuiz_id(), true);
+            }
+            else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You are not in this course!");
+        }
+
+        if (request.size() != questions.size()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incompatible size!");
+        for (int i = 0; i < request.size(); i++){
+            if (request.get(i).getQuestionId() == questions.get(i).getQuestion_id()){
+                if (Objects.equals(request.get(i).getRightAnswer(), questions.get(i).getRightAnswer())) result++;
+            }
+            else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incompatible ids!");
+        }
+        Enrollment enrollment = enrollmentService.updateEnrollment(courseId, studentService.findStudentByUserId(user.getId()).getStudent_id());
+        if (enrollment == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Already completed this course!");
+        return result;
+
     }
 }
