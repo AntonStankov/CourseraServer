@@ -118,8 +118,8 @@ public class QuizController {
         }
 
         @Override
-        public Course findByIdTabs(Long courseId, Long studentId) {
-            return CourseService.super.findByIdTabs(courseId, studentId);
+        public Course findByIdTabs(Long courseId) {
+            return CourseService.super.findByIdTabs(courseId);
         }
 
         @Override

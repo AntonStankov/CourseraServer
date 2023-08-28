@@ -178,7 +178,7 @@ public class TabsTableManager {
         return tab;
     }
 
-    public List<Tab> findTabsByCourseId(Long courseId, Long studentId) {
+    public List<Tab> findTabsByCourseId(Long courseId) {
         List<Tab> tabs = new ArrayList<>();
         Tab tab = null;
         try (Connection connection = datasource.createConnection()) {

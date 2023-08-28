@@ -75,8 +75,8 @@ public class EnrollmentTableManager {
         }
 
         @Override
-        public List<Tab> findTabsByCourseId(Long courseId, Long studentId) {
-            return TabsService.super.findTabsByCourseId(courseId, studentId);
+        public List<Tab> findTabsByCourseId(Long courseId) {
+            return TabsService.super.findTabsByCourseId(courseId);
         }
     };
 
@@ -212,7 +212,7 @@ public class EnrollmentTableManager {
                         course.setDescription(resultSet.getString("description"));
                         course.setCourseId(resultSet.getLong("courseId"));
                         course.setCourseName(resultSet.getString("courseName"));
-                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId"), null));
+                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
                         Teacher teacher = new Teacher();
                         teacher.setTeacher_id(resultSet.getLong("teacher_id"));
                         teacher.setName(resultSet.getString("name"));
@@ -275,7 +275,7 @@ public class EnrollmentTableManager {
                         Course course = new Course();
                         course.setCourseId(resultSet.getLong("courseId"));
                         course.setCourseName(resultSet.getString("courseName"));
-                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId"), studentId));
+                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
 
                         Teacher teacher = new Teacher();
                         teacher.setTeacher_id(resultSet.getLong("teacher_id"));

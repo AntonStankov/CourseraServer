@@ -154,8 +154,8 @@ public class TabsController {
         }
 
         @Override
-        public List<Tab> findTabsByCourseId(Long courseId, Long studentId) {
-            return TabsService.super.findTabsByCourseId(courseId, studentId);
+        public List<Tab> findTabsByCourseId(Long courseId) {
+            return TabsService.super.findTabsByCourseId(courseId);
         }
 
         @Override
