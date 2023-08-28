@@ -12,6 +12,7 @@ import com.example.demo.service.student.StudentService;
 import com.example.demo.service.teacher.TeacherService;
 import com.example.demo.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.Path;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -103,6 +104,11 @@ public class QuizController {
         @Override
         public boolean checkQuestionInQuiz(Long quizId, Long questionId) {
             return QuizService.super.checkQuestionInQuiz(quizId, questionId);
+        }
+
+        @Override
+        public List<Question> getQuestionsByQuizId(Long quizId, boolean teacher) {
+            return QuizService.super.getQuestionsByQuizId(quizId, teacher);
         }
     };
 
@@ -268,5 +274,28 @@ public class QuizController {
             else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is no question with this id in this quiz!");
         }
         else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You are not in this course!");
+    }
+
+    @GetMapping("/getQuestions/{courseId}")
+    public List<Question> getQuestionByCourseId(@PathVariable Long courseId, HttpServletRequest httpServletRequest){
+        User user = userService.findByEmail(jwtTokenService.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
+        Course course = new Course();
+        Student student = new Student();
+
+        if (user.getRole().equals(UserRoleEnum.STUDENT)){
+            student = studentService.findStudentByUserId(user.getId());
+            course =  courseService.findById(courseId, student.getStudent_id());
+        }
+        else course = courseService.findById(courseId, null);
+
+        if (user.getRole().equals(UserRoleEnum.TEACHER)){
+            return quizService.getQuestionsByQuizId(quizService.getQuizByCourseId(courseId).getQuiz_id(), user.getRole().equals(UserRoleEnum.TEACHER));
+        }
+        else {
+            if (enrollmentService.findEnrollmentByStudnentAndCourseIds(courseId, student.getStudent_id()) != null){
+                return quizService.getQuestionsByQuizId(quizService.getQuizByCourseId(courseId).getQuiz_id(), false);
+            }
+            else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You are not in this course!");
+        }
     }
 }
