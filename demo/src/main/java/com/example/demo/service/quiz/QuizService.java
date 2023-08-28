@@ -7,6 +7,8 @@ import com.example.demo.entity.Question;
 import com.example.demo.entity.Quiz;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface QuizService {
 
@@ -39,6 +41,10 @@ public interface QuizService {
 
     public default boolean checkQuestionInQuiz(Long quizId, Long questionId){
         return quizTableManager.checkQuestionInQuiz(quizId, questionId);
+    }
+
+    public default List<Question> getQuestionsByQuizId(Long quizId, boolean teacher){
+        return quizTableManager.getQuestionsByQuizId(quizId, teacher);
     }
 
 }

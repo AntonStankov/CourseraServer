@@ -174,7 +174,7 @@ public class QuizTableManager {
                     if (resultSet.next()) {
                         quiz = new Quiz();
                         quiz.setQuiz_id(resultSet.getLong("quiz_id"));
-                        quiz.setQuestions(getQuestionsByQuizId(resultSet.getLong("quiz_id")));
+                        quiz.setQuestions(getQuestionsByQuizId(resultSet.getLong("quiz_id"), true));
 
                     }
                 }
@@ -196,7 +196,7 @@ public class QuizTableManager {
                     if (resultSet.next()) {
                         quiz = new Quiz();
                         quiz.setQuiz_id(resultSet.getLong("quiz_id"));
-                        quiz.setQuestions(getQuestionsByQuizId(resultSet.getLong("quiz_id")));
+                        quiz.setQuestions(getQuestionsByQuizId(resultSet.getLong("quiz_id"), false));
                     }
                 }
             }
@@ -205,7 +205,7 @@ public class QuizTableManager {
         }
         return quiz;
     }
-    public List<Question> getQuestionsByQuizId(Long quizId) {
+    public List<Question> getQuestionsByQuizId(Long quizId, boolean teacher) {
         List<Question> questions = new ArrayList<>();
         try (Connection connection = datasource.createConnection()) {
             String sql = "SELECT * FROM question e " +
@@ -217,7 +217,7 @@ public class QuizTableManager {
                         Question question = new Question();
                         question.setQuestion_id(resultSet.getLong("question_id"));
                         question.setQuestion(resultSet.getString("question"));
-                        question.setRightAnswer(resultSet.getString("rightAnswer"));
+                        if (teacher) question.setRightAnswer(resultSet.getString("rightAnswer"));
                         question.setAnswers(getAnswersByQuestionId(resultSet.getLong("question_id")));
 
                         questions.add(question);
