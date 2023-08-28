@@ -178,7 +178,9 @@ public class TabsTableManager {
         return tab;
     }
 
-    public List<Tab> findTabsByCourseId(Long courseId) {
+    public List<Tab> findTabsByCourseId(Long courseId, Long studentId) {
+        if (studentId == null) studentId = 0L;
+        boolean completed = false;
         List<Tab> tabs = new ArrayList<>();
         Tab tab = null;
         try (Connection connection = datasource.createConnection()) {
@@ -189,11 +191,29 @@ public class TabsTableManager {
                     while (resultSet.next()) {
                         tab = new Tab();
                         tab.setTab_id(resultSet.getLong("tab_id"));
+                        String checkQuery = "SELECT CASE " +
+                                "    WHEN EXISTS (SELECT * FROM tabCompletion t WHERE t.tab_id = ? AND t.student_id = ?) " +
+                                "    THEN TRUE " +
+                                "    ELSE FALSE " +
+                                "END AS completed;";
+
+                        try (PreparedStatement preparedStatement1 = connection.prepareStatement(checkQuery)) {
+                            assert tab != null;
+                            preparedStatement1.setLong(1, tab.getTab_id());
+                            preparedStatement1.setLong(2, studentId);
+                            try (ResultSet resultSet1 = preparedStatement1.executeQuery()) {
+                                if (resultSet1.next()) {
+                                    completed = resultSet1.getBoolean("completed");
+                                }
+                            }
+                        }
                         tab.setTabName(resultSet.getString("tabName"));
+                        tab.setCompleted(completed);
                         tabs.add(tab);
                     }
                 }
             }
+
         } catch (SQLException e) {
             //
         }

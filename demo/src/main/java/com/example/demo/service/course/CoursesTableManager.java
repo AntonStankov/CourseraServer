@@ -26,8 +26,8 @@ public class CoursesTableManager {
         }
 
         @Override
-        public List<Tab> findTabsByCourseId(Long courseId) {
-            return TabsService.super.findTabsByCourseId(courseId);
+        public List<Tab> findTabsByCourseId(Long courseId, Long studentId) {
+            return TabsService.super.findTabsByCourseId(courseId, studentId);
         }
     };
 
@@ -168,7 +168,7 @@ public class CoursesTableManager {
         return course;
     }
 
-    public Course getCourseByIdWithTabs(Long courseId) {
+    public Course getCourseByIdWithTabs(Long courseId, Long studentId) {
         Course course = null;
         try (Connection connection = datasource.createConnection()) {
             String sql = "SELECT c.*, t.*, u.* FROM courses c " +
@@ -187,7 +187,7 @@ public class CoursesTableManager {
                         course.setDuration(resultSet.getLong("duration"));
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
-                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
+                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId"), studentId));
                         course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
 
 

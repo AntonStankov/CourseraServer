@@ -75,8 +75,8 @@ public class EnrollmentTableManager {
         }
 
         @Override
-        public List<Tab> findTabsByCourseId(Long courseId) {
-            return TabsService.super.findTabsByCourseId(courseId);
+        public List<Tab> findTabsByCourseId(Long courseId, Long studentId) {
+            return TabsService.super.findTabsByCourseId(courseId, studentId);
         }
     };
 
@@ -212,7 +212,7 @@ public class EnrollmentTableManager {
                         course.setDescription(resultSet.getString("description"));
                         course.setCourseId(resultSet.getLong("courseId"));
                         course.setCourseName(resultSet.getString("courseName"));
-                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
+//                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
                         Teacher teacher = new Teacher();
                         teacher.setTeacher_id(resultSet.getLong("teacher_id"));
                         teacher.setName(resultSet.getString("name"));
@@ -252,6 +252,7 @@ public class EnrollmentTableManager {
     }
 
     public Long findEnrollmentByStudentAndCourseIds(Long courseId, Long studentId){
+        if (studentId == null) studentId = 0L;
         Enrollment enrollment = new Enrollment(null, null, null, null, null);
         try (Connection connection = datasource.createConnection()) {
             String sql = "SELECT * FROM enrollment e " +
@@ -275,7 +276,7 @@ public class EnrollmentTableManager {
                         Course course = new Course();
                         course.setCourseId(resultSet.getLong("courseId"));
                         course.setCourseName(resultSet.getString("courseName"));
-                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
+//                        course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId")));
 
                         Teacher teacher = new Teacher();
                         teacher.setTeacher_id(resultSet.getLong("teacher_id"));

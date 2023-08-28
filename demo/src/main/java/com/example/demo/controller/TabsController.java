@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.entity.*;
 import com.example.demo.enums.TabContentType;
+import com.example.demo.enums.UserRoleEnum;
 import com.example.demo.jwt.JwtTokenService;
 import com.example.demo.service.course.CourseService;
 import com.example.demo.service.course.UserState;
@@ -154,8 +155,8 @@ public class TabsController {
         }
 
         @Override
-        public List<Tab> findTabsByCourseId(Long courseId) {
-            return TabsService.super.findTabsByCourseId(courseId);
+        public List<Tab> findTabsByCourseId(Long courseId, Long studentId) {
+            return TabsService.super.findTabsByCourseId(courseId, studentId);
         }
 
         @Override
@@ -288,9 +289,16 @@ public class TabsController {
     public Tab getTabById(@PathVariable Long courseId, @PathVariable Long tabId, HttpServletRequest httpServletRequest){
         User user = userService.findByEmail(jwtTokenService.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
         Student student = studentService.findStudentByUserId(user.getId());
-        Course course = courseService.findById(courseId, student.getStudent_id());
-        if (enrollmentService.findEnrollmentByStudnentAndCourseIds(courseId, student.getStudent_id()) == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You are not in this course!");
+        Course course = new Course();
+        if (student == null) course = courseService.findById(courseId, null);
+        else course = courseService.findById(courseId, student.getStudent_id());
+
+        assert student != null;
+        if (user.getRole().equals(UserRoleEnum.STUDENT)){
+            if (enrollmentService.findEnrollmentByStudnentAndCourseIds(courseId, student.getStudent_id()) == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You are not in this course!");
+        }
         if (!tabsService.checkTabInCourse(course.getCourseId(), tabId)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This tab is not in this course!");
-        return tabsService.findById(tabId, student.getStudent_id());
+        if (user.getRole().equals(UserRoleEnum.STUDENT)) return tabsService.findById(tabId, student.getStudent_id());
+        else return tabsService.findById(tabId, null);
     }
 }

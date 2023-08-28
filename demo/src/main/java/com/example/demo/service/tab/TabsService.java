@@ -14,8 +14,8 @@ public interface TabsService {
         return tabsTableManager.insertTab(tab, courseId);
     }
 
-    public default List<Tab> findTabsByCourseId(Long courseId){
-        return tabsTableManager.findTabsByCourseId(courseId);
+    public default List<Tab> findTabsByCourseId(Long courseId, Long studentId){
+        return tabsTableManager.findTabsByCourseId(courseId, studentId);
     }
 
     public default Tab editTab(Tab tab, Long id){
