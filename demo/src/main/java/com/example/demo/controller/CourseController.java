@@ -284,7 +284,7 @@ public class CourseController {
             StateEnums stateEnum = null;
             UserState userState = courseService.checkEnrollment(courseId, studentService.findStudentByUserId(user.getId()).getStudent_id());
             if (userState.isEnrolled() && userState.isCompleted()) stateEnum = StateEnums.COMPLETED;
-            else if (userState.isEnrolled() && !userState.isCompleted()) stateEnum = StateEnums.CAN_COMPLETE;
+            else if (userState.isEnrolled() && !userState.isCompleted()) stateEnum = StateEnums.START_QUIZ;
             else if (!userState.isEnrolled()) stateEnum = StateEnums.CAN_ENROLL;
             return new CourseState(course, stateEnum);
         }

@@ -31,8 +31,8 @@ public interface QuizService {
         return quizTableManager.insertAnswer(questionId, answer);
     }
 
-    public default Question insertQuestion(Long quizId, String question, String rightAnswer){
-        return quizTableManager.insertQuestion(quizId, question, rightAnswer);
+    public default Question insertQuestion(Long quizId, String question, String rightAnswer, int points){
+        return quizTableManager.insertQuestion(quizId, question, rightAnswer, points);
     }
 
     public default Question getQuestionById(Long questionId){
