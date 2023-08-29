@@ -328,7 +328,7 @@ public class QuizController {
         if (request.size() != questions.size()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incompatible size!");
         for (int i = 0; i < request.size(); i++){
             if (request.get(i).getQuestionId() == questions.get(i).getQuestion_id()){
-                if (Objects.equals(request.get(i).getRightAnswer(), questions.get(i).getRightAnswer())) result++;
+                if (Objects.equals(request.get(i).getRightAnswer(), questions.get(i).getRightAnswer())) result += questions.get(i).getPoints();
             }
             else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incompatible ids!");
         }
