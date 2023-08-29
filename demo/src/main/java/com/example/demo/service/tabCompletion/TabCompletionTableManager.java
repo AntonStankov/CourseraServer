@@ -182,5 +182,26 @@ public class TabCompletionTableManager {
         return tabCompletion;
     }
 
+//    public boolean checkTabsCompleted(Long course_id, Long student_id){
+//        List<Tab> tabs = tabsService.findTabsByCourseId(course_id, student_id);
+//        TabCompletion tabCompletion = null;
+//        try (Connection connection = datasource.createConnection()) {
+//            String sql = "SELECT CASE " +
+//                    "    WHEN EXISTS (SELECT * FROM tabCompletion t WHERE t.course_id = ? AND t.tab_id = ?) " +
+//                    "    THEN TRUE " +
+//                    "    ELSE FALSE " +
+//                    "END AS isInCourse;";
+//            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+//
+//                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+//                    if (resultSet.next()) {
+//                    }
+//                }
+//            }
+//        } catch (SQLException e) {
+//            // Handle the exception
+//        }
+//        return tabCompletion;
+//    }
 
 }

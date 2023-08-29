@@ -8,5 +8,5 @@ import lombok.Setter;
 
 @NoArgsConstructor
 public enum StateEnums {
-    CAN_ENROLL, START_QUIZ, COMPLETED
+    CAN_ENROLL, COMPLETE_TABS, START_QUIZ, COMPLETED
 }

@@ -53,4 +53,7 @@ public class Course {
 
     @OneToOne
     private Quiz quiz;
+
+    @Column
+    private double rating;
 }

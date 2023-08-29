@@ -302,7 +302,7 @@ public class QuizController {
     }
 
     @PostMapping("/complete/{courseId}")
-    public int completeQuiz(@PathVariable Long courseId, @RequestBody List<AnswersRequest> request, HttpServletRequest httpServletRequest){
+    public Object completeQuiz(@PathVariable Long courseId, @RequestBody List<AnswersRequest> request, HttpServletRequest httpServletRequest){
         int result = 0;
         User user = userService.findByEmail(jwtTokenService.getEmailFromToken(jwtTokenService.getTokenFromRequest(httpServletRequest)));
         Course course = new Course();
@@ -312,6 +312,12 @@ public class QuizController {
         if (user.getRole().equals(UserRoleEnum.STUDENT)){
             student = studentService.findStudentByUserId(user.getId());
             course =  courseService.findById(courseId, student.getStudent_id());
+            if (quizService.getQuizByCourseId(courseId) == null) {
+                Enrollment enrollment = enrollmentService.updateEnrollment(courseId, studentService.findStudentByUserId(user.getId()).getStudent_id());
+                if (enrollment == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Already completed this course!");
+                return true;
+
+            }
         }
         else course = courseService.findById(courseId, null);
 
