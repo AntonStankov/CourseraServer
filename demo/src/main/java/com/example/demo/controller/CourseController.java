@@ -9,6 +9,7 @@ import com.example.demo.service.course.UserState;
 import com.example.demo.service.enrollment.EnrollmentService;
 import com.example.demo.service.secrets.SecretsService;
 import com.example.demo.service.student.StudentService;
+import com.example.demo.service.tab.TabsService;
 import com.example.demo.service.teacher.TeacherService;
 import com.example.demo.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,6 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 import java.util.Objects;
 
 @CrossOrigin(origins = "http://localhost:5173")
@@ -146,6 +148,33 @@ public class CourseController {
         @Override
         public Long findEnrollmentByStudnentAndCourseIds(Long courseId, Long studentId) {
             return EnrollmentService.super.findEnrollmentByStudnentAndCourseIds(courseId, studentId);
+        }
+    };
+
+    private TabsService tabsService = new TabsService() {
+        @Override
+        public Tab insertTab(Tab tab, Long courseId) {
+            return TabsService.super.insertTab(tab, courseId);
+        }
+
+        @Override
+        public List<Tab> findTabsByCourseId(Long courseId, Long studentId) {
+            return TabsService.super.findTabsByCourseId(courseId, studentId);
+        }
+
+        @Override
+        public Tab editTab(Tab tab, Long id) {
+            return TabsService.super.editTab(tab, id);
+        }
+
+        @Override
+        public Tab findById(Long tabId, Long studentId) {
+            return TabsService.super.findById(tabId, studentId);
+        }
+
+        @Override
+        public boolean checkTabInCourse(Long courseId, Long tabId) {
+            return TabsService.super.checkTabInCourse(courseId, tabId);
         }
     };
 
@@ -284,7 +313,13 @@ public class CourseController {
             StateEnums stateEnum = null;
             UserState userState = courseService.checkEnrollment(courseId, studentService.findStudentByUserId(user.getId()).getStudent_id());
             if (userState.isEnrolled() && userState.isCompleted()) stateEnum = StateEnums.COMPLETED;
-            else if (userState.isEnrolled() && !userState.isCompleted()) stateEnum = StateEnums.START_QUIZ;
+            else if (userState.isEnrolled() && !userState.isCompleted()){
+                stateEnum = StateEnums.START_QUIZ;
+                List<Tab> tabs = tabsService.findTabsByCourseId(courseId, studentService.findStudentByUserId(user.getId()).getStudent_id());
+                for (int i = 0; i < tabs.size(); i++){
+                    if (!tabs.get(i).isCompleted()) stateEnum = StateEnums.COMPLETE_TABS;
+                }
+            }
             else if (!userState.isEnrolled()) stateEnum = StateEnums.CAN_ENROLL;
             return new CourseState(course, stateEnum);
         }

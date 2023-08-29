@@ -4,6 +4,7 @@ package com.example.demo.service.course;
 import com.example.demo.config.DataSource;
 import com.example.demo.controller.PaginationResponse;
 import com.example.demo.entity.*;
+import com.example.demo.service.rating.RatingService;
 import com.example.demo.service.student.StudentService;
 import com.example.demo.service.tab.TabsService;
 import com.example.demo.service.teacher.TeacherService;
@@ -87,6 +88,13 @@ public class CoursesTableManager {
         }
     };
 
+    private RatingService ratingService = new RatingService() {
+        @Override
+        public double getAverageRating(Long course_id) {
+            return RatingService.super.getAverageRating(course_id);
+        }
+    };
+
     private final DataSource datasource = new DataSource();
     public Course insertCourse(Course course, Teacher teacher) {
         Long generatedCourseId = null;
@@ -148,6 +156,7 @@ public class CoursesTableManager {
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
                         course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
+                        course.setRating(ratingService.getAverageRating(courseId));
 
 
                         // Create a Teacher object and set its attributes
@@ -189,6 +198,8 @@ public class CoursesTableManager {
                         course.setStudentsCount(resultSet.getLong("students_count"));
                         course.setTabs(tabsService.findTabsByCourseId(resultSet.getLong("courseId"), studentId));
                         course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
+                        course.setRating(ratingService.getAverageRating(courseId));
+
 
 
                         // Create a Teacher object and set its attributes
@@ -319,6 +330,8 @@ public class CoursesTableManager {
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
                         course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
+                        course.setRating(ratingService.getAverageRating(course.getCourseId()));
+
 
                         courses.add(course);
                     }
@@ -396,6 +409,8 @@ public class CoursesTableManager {
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
                         course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
+                        course.setRating(ratingService.getAverageRating(course.getCourseId()));
+
 
 
                         courses.add(course);
@@ -445,6 +460,8 @@ public class CoursesTableManager {
                         course.setStudentsCount(resultSet.getLong("students_count"));
                         if (studentService.findStudentByUserId(userId) != null) studentId = studentService.findStudentByUserId(userId).getStudent_id();
                         course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
+                        course.setRating(ratingService.getAverageRating(course.getCourseId()));
+
 
 
                         courses.add(course);
@@ -524,6 +541,8 @@ public class CoursesTableManager {
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
                         course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
+                        course.setRating(ratingService.getAverageRating(course.getCourseId()));
+
 
 
 
@@ -577,6 +596,8 @@ public class CoursesTableManager {
                         course.setPicturePath(resultSet.getString("picture_path"));
                         course.setStudentsCount(resultSet.getLong("students_count"));
                         course.setTime_created(resultSet.getTimestamp("time_created").toLocalDateTime());
+                        course.setRating(ratingService.getAverageRating(course.getCourseId()));
+
 
 
                         courses.add(course);
