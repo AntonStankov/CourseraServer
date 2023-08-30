@@ -15,4 +15,8 @@ public interface RatingService {
     public default double getAverageRating(Long course_id){
         return ratingTableManager.getAverageRating(course_id);
     }
+
+    public default Rating getRatingByCourseAndStudentId(Long student_id, Long course_id){
+        return ratingTableManager.getRatingByCourseAndStudentId(student_id, course_id);
+    }
 }

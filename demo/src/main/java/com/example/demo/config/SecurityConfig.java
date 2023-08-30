@@ -43,7 +43,7 @@ public class SecurityConfig implements WebMvcConfigurer {
 
         http.cors(Customizer.withDefaults());
         http.authorizeRequests()
-                .requestMatchers("/user/**", "/roles/**", "/test/test", "/group/**", "/document/**", "/folder/**", "/chat", "/topic/messages", "/chat/**", "/user/refresh").authenticated()
+                .requestMatchers("/**").authenticated()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .anyRequest().permitAll().and()
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));

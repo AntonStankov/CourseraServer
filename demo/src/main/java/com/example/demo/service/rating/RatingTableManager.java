@@ -182,6 +182,27 @@ public class RatingTableManager {
         return rating;
     }
 
+    public Rating getRatingByCourseAndStudentId(Long studentId, Long courseId) {
+        Rating rating = new Rating();
+        try (Connection connection = datasource.createConnection()) {
+            String sql = "SELECT * FROM rating WHERE student_id = ? AND course_id = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setLong(1, studentId);
+                preparedStatement.setLong(2, courseId);
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        rating.setRating_id(resultSet.getLong("rating_id"));
+                        rating.setRating(resultSet.getDouble("rating"));
+                        rating.setStudent(studentService.findById(resultSet.getLong("student_id")));
+                        rating.setCourse(courseService.findById(resultSet.getLong("course_id"), rating.getStudent().getStudent_id()));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return rating;
+    }
 
     public double getAverageRating(Long course_id){
         double rating = 0.0;
