@@ -142,7 +142,6 @@ public class EnrollmentTableManager {
                 int affectedRows = preparedStatement.executeUpdate();
 
                 int credit = courseService.findById(courseId, studentId).getCredit();
-                studentService.addCredit(studentId, credit);
                 courseService.addStudentsCount(courseId);
                 if (affectedRows > 0) {
                     ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
@@ -242,6 +241,7 @@ public class EnrollmentTableManager {
                 preparedStatement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
                 preparedStatement.setLong(3, enrollmentId);
                 preparedStatement.executeUpdate();
+                studentService.addCredit(studentId, courseService.findById(courseId, studentId).getCredit());
             }
         } catch (SQLException e) {
             e.printStackTrace();

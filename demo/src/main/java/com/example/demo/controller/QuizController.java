@@ -295,6 +295,7 @@ public class QuizController {
         }
         else {
             if (enrollmentService.findEnrollmentByStudnentAndCourseIds(courseId, student.getStudent_id()) != null){
+                if (quizService.getQuizByCourseId(courseId) == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is no quiz in this course!");
                 return quizService.getQuestionsByQuizId(quizService.getQuizByCourseId(courseId).getQuiz_id(), false);
             }
             else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You are not in this course!");
