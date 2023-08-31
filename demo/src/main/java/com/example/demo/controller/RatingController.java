@@ -36,6 +36,11 @@ public class RatingController {
         public Rating getRatingByCourseAndStudentId(Long student_id, Long course_id) {
             return RatingService.super.getRatingByCourseAndStudentId(student_id, course_id);
         }
+
+        @Override
+        public void updateRatingCount(Long student_id, Long course_id) {
+            RatingService.super.updateRatingCount(student_id, course_id);
+        }
     };
 
     private UserService userService = new UserService() {
@@ -133,7 +138,7 @@ public class RatingController {
         if (user.getRole().equals(UserRoleEnum.TEACHER)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You are not a student!");
         Student student = studentService.findStudentByUserId(user.getId());
         if (enrollmentService.findEnrollmentByStudnentAndCourseIds(course_id, student.getStudent_id()) == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You are not signed for this course!");
-        if (ratingService.getRatingByCourseAndStudentId(student.getStudent_id(), course_id) != null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You have already rated this course!");
+        if (ratingService.getRatingByCourseAndStudentId(student.getStudent_id(), course_id).getRating_id() != null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You have already rated this course!");
         return ratingService.insertRating(student.getStudent_id(), course_id, rating);
     }
 }

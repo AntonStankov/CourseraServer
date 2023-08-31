@@ -19,4 +19,8 @@ public interface RatingService {
     public default Rating getRatingByCourseAndStudentId(Long student_id, Long course_id){
         return ratingTableManager.getRatingByCourseAndStudentId(student_id, course_id);
     }
+
+    public default void updateRatingCount(Long student_id, Long course_id){
+        ratingTableManager.updateRatingCount(student_id, course_id);
+    }
 }

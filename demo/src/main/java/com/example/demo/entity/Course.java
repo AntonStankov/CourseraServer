@@ -56,4 +56,7 @@ public class Course {
 
     @Column
     private double rating;
+
+    @Column
+    private Long ratingCount;
 }

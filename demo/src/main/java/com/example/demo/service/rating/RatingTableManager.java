@@ -157,8 +157,26 @@ public class RatingTableManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        updateRatingCount(student_id, course_id);
         return getRatingById(generatedRatingId);
     }
+
+
+    public void updateRatingCount(Long student_id, Long course_id) {
+        Course course = courseService.findById(course_id, student_id);
+        System.out.println(course.getRatingCount());
+        try (Connection connection = datasource.createConnection()) {
+            String sql = "UPDATE courses SET rating_count = ? WHERE courseId = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setLong(1, (course.getRatingCount() + 1L));
+                preparedStatement.setLong(2, course_id);
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 
     public Rating getRatingById(Long id) {
