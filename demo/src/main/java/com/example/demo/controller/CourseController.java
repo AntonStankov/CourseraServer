@@ -7,6 +7,7 @@ import com.example.demo.jwt.JwtTokenService;
 import com.example.demo.service.course.CourseService;
 import com.example.demo.service.course.UserState;
 import com.example.demo.service.enrollment.EnrollmentService;
+import com.example.demo.service.quiz.QuizService;
 import com.example.demo.service.secrets.SecretsService;
 import com.example.demo.service.student.StudentService;
 import com.example.demo.service.tab.TabsService;
@@ -178,6 +179,48 @@ public class CourseController {
         }
     };
 
+    private QuizService quizService = new QuizService() {
+        @Override
+        public Quiz save(String quizName, Long courseId) {
+            return QuizService.super.save(quizName, courseId);
+        }
+
+        @Override
+        public Quiz getQuizByCourseId(Long courseId) {
+            return QuizService.super.getQuizByCourseId(courseId);
+        }
+
+        @Override
+        public Quiz getQuizById(Long quizId) {
+            return QuizService.super.getQuizById(quizId);
+        }
+
+        @Override
+        public Answers insertAnswer(Long questionId, String answer) {
+            return QuizService.super.insertAnswer(questionId, answer);
+        }
+
+        @Override
+        public Question insertQuestion(Long quizId, String question, String rightAnswer, int points) {
+            return QuizService.super.insertQuestion(quizId, question, rightAnswer, points);
+        }
+
+        @Override
+        public Question getQuestionById(Long questionId) {
+            return QuizService.super.getQuestionById(questionId);
+        }
+
+        @Override
+        public boolean checkQuestionInQuiz(Long quizId, Long questionId) {
+            return QuizService.super.checkQuestionInQuiz(quizId, questionId);
+        }
+
+        @Override
+        public List<Question> getQuestionsByQuizId(Long quizId, boolean teacher) {
+            return QuizService.super.getQuestionsByQuizId(quizId, teacher);
+        }
+    };
+
     private String coursesImages = "src/main/resources/static/";
 
     String url = "https://localhost:8080/actuator/refresh";
@@ -318,6 +361,10 @@ public class CourseController {
                 List<Tab> tabs = tabsService.findTabsByCourseId(courseId, studentService.findStudentByUserId(user.getId()).getStudent_id());
                 for (int i = 0; i < tabs.size(); i++){
                     if (!tabs.get(i).isCompleted()) stateEnum = StateEnums.COMPLETE_TABS;
+                }
+                if (stateEnum == StateEnums.START_QUIZ && quizService.getQuizByCourseId(courseId) == null) {
+                    enrollmentService.updateEnrollment(courseId, studentService.findStudentByUserId(user.getId()).getStudent_id());
+                    stateEnum = StateEnums.COMPLETED;
                 }
             }
             else if (!userState.isEnrolled()) stateEnum = StateEnums.CAN_ENROLL;
